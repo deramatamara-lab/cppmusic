@@ -1,0 +1,46 @@
+# Pre-commit hooks for DAW Project
+# Enforces DAW_DEV_RULES.md requirements
+# Install with: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  - repo: https://github.com/pocc/pre-commit-cpp
+    rev: v0.15.0
+    hooks:
+      - id: clang-format
+        args: [--style=file]
+        files: \.(cpp|h|hpp|c|cc|cxx)$
+      - id: clang-tidy
+        args: [-p, build, --config-file=.clang-tidy]
+        files: \.(cpp|h|hpp|c|cc|cxx)$
+        additional_dependencies: ['clang-tidy']
+        # Only run on changed files to save time
+        pass_filenames: true
+
+  - repo: local
+    hooks:
+      - id: check-cmake-format
+        name: Check CMake formatting
+        entry: bash -c 'command -v cmake-format >/dev/null 2>&1 && cmake-format --check CMakeLists.txt || echo "cmake-format not installed, skipping"'
+        language: system
+        files: CMakeLists\.txt$
+        pass_filenames: false
+
+      - id: verify-compile-commands
+        name: Verify compile_commands.json exists
+        entry: bash -c 'test -f build/compile_commands.json || (echo "ERROR: compile_commands.json not found. Run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" && exit 1)'
+        language: system
+        pass_filenames: false
+

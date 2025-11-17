@@ -1,0 +1,71 @@
+#pragma once
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/juce_audio_utils.h>
+#include <vector>
+#include <memory>
+#include <atomic>
+
+namespace daw::audio::dsp
+{
+    class TrackStrip;
+}
+
+namespace daw::audio::engine
+{
+
+/**
+ * @brief Audio processing graph
+ * 
+ * Implements JUCE AudioProcessor interface.
+ * Manages collection of TrackStrip instances and sums to master bus.
+ * Follows DAW_DEV_RULES: real-time safe, no allocations/locks in processBlock.
+ */
+class AudioGraph : public juce::AudioProcessor
+{
+public:
+    AudioGraph();
+    ~AudioGraph() override = default;
+
+    // JUCE AudioProcessor interface
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override;
+
+    // Processor info
+    const juce::String getName() const override { return "DAW Audio Graph"; }
+    bool acceptsMidi() const override { return true; }
+    bool producesMidi() const override { return false; }
+    double getTailLengthSeconds() const override { return 0.0; }
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
+    bool hasEditor() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+    void getStateInformation(juce::MemoryBlock& destData) override { juce::ignoreUnused(destData); }
+    void setStateInformation(const void* data, int sizeInBytes) override { juce::ignoreUnused(data, sizeInBytes); }
+
+    // Track management (call from non-audio thread)
+    daw::audio::dsp::TrackStrip* addTrack();
+    void removeTrack(int index);
+    daw::audio::dsp::TrackStrip* getTrack(int index);
+    [[nodiscard]] int getNumTracks() const noexcept { return static_cast<int>(trackStrips.size()); }
+
+    // Master gain (atomic for thread safety)
+    void setMasterGain(float gainDb) noexcept;
+    [[nodiscard]] float getMasterGain() const noexcept;
+
+private:
+    std::vector<std::unique_ptr<daw::audio::dsp::TrackStrip>> trackStrips;
+    std::atomic<float> masterGainLinear;
+    
+    juce::AudioBuffer<float> masterBuffer;
+    
+    [[nodiscard]] static float dbToLinear(float db) noexcept;
+};
+
+} // namespace daw::audio::engine
+

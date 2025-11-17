@@ -1,0 +1,52 @@
+---
+# clang-tidy configuration for DAW Project
+# Enforces DAW_DEV_RULES.md requirements
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length
+
+# Memory Safety (Section 1.1)
+WarningsAsErrors: >
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-raw-pointer-arithmetic,
+  cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  modernize-use-unique_ptr,
+  modernize-use-shared_ptr,
+  modernize-avoid-c-arrays,
+  modernize-use-auto
+
+# Real-Time Safety (Section 1.2, 2.1)
+# Note: clang-tidy cannot directly detect allocations in processBlock,
+# but we can catch common patterns and require noexcept
+CheckOptions:
+  - key: cppcoreguidelines-pro-type-member-init.UseAssignment
+    value: 'false'
+  - key: modernize-use-nodiscard.StrictMode
+    value: 'true'
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+
+# C++20 Compliance (Section 1.4)
+# Enforce modern C++ features
+HeaderFilterRegex: '.*'
+
+# Exclude third-party code
+ExcludeHeaderFilterRegex: '.*/(JUCE|catch2|gtest|gmock)/.*'
+
+# Exclude build directories
+ExcludeRegex: '.*/(build|cmake-build|\.git)/.*'
+
