@@ -1,4 +1,49 @@
+# Build directories
 build/
-.external/
+build-tests/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled object files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+*.app
+
+# IDE files
 *.user
 *.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# External dependencies
+.external/
+_deps/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Test binaries
+*_tests
+test_*
