@@ -9,7 +9,7 @@ namespace daw::audio::dsp
 
 /**
  * @brief Low-frequency oscillator modulator
- * 
+ *
  * Supports multiple waveforms: sine, triangle, saw, square, noise, etc.
  * Follows DAW_DEV_RULES: real-time safe, no allocations in processBlock.
  */
@@ -90,12 +90,12 @@ private:
     std::atomic<bool> syncToTempo{false};
     std::atomic<float> syncTempoBpm{120.0f};
     std::atomic<float> syncBeatDivision{1.0f};
-    
+
     float phase{0.0f};
-    float lastNoiseValue{0.0f};
+    mutable float lastNoiseValue{0.0f};
     mutable float lastSampleHoldValue{0.0f};
     mutable int sampleHoldCounter{0};
-    
+
     [[nodiscard]] float generateSample(float phaseValue, Waveform wf) const noexcept;
     [[nodiscard]] float getPhaseIncrement() const noexcept;
 };

@@ -79,15 +79,15 @@ void TrackStrip::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer
 {
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
-    
+
     if (numChannels == 0 || numSamples == 0)
         return;
-    
+
     // Load parameters atomically
     const auto currentGain = gainLinear.load(std::memory_order_acquire);
     const auto currentPan = pan.load(std::memory_order_acquire);
     const auto currentMuted = muted.load(std::memory_order_acquire);
-    
+
     // Apply mute
     if (currentMuted)
     {
@@ -95,7 +95,7 @@ void TrackStrip::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer
         updateMeters(buffer);
         return;
     }
-    
+
     // Apply gain
     if (currentGain != 1.0f)
     {
@@ -108,23 +108,29 @@ void TrackStrip::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer
             }
         }
     }
-    
-    // Apply pan (simple stereo panning)
+
+    // Apply pan using constant power panning (professional standard)
+    // Constant power maintains perceived loudness across pan positions
     if (numChannels == 2 && std::abs(currentPan) > 0.001f)
     {
-        const auto leftGain = currentPan <= 0.0f ? 1.0f : 1.0f - currentPan;
-        const auto rightGain = currentPan >= 0.0f ? 1.0f : 1.0f + currentPan;
-        
+        // Convert linear pan (-1.0 = left, 0.0 = center, 1.0 = right) to constant power
+        // Using sin/cos law for constant power panning
+        const float panPosition = juce::jlimit(-1.0f, 1.0f, currentPan);
+        const float panAngle = (panPosition + 1.0f) * juce::MathConstants<float>::pi / 4.0f; // 0 to pi/2
+
+        const float leftGain = std::cos(panAngle);
+        const float rightGain = std::sin(panAngle);
+
         auto* leftData = buffer.getWritePointer(0);
         auto* rightData = buffer.getWritePointer(1);
-        
+
         for (int i = 0; i < numSamples; ++i)
         {
             leftData[i] *= leftGain;
             rightData[i] *= rightGain;
         }
     }
-    
+
     // Update meters
     updateMeters(buffer);
 }
@@ -154,10 +160,10 @@ void TrackStrip::updateMeters(const juce::AudioBuffer<float>& buffer) noexcept
 {
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
-    
+
     if (numChannels == 0 || numSamples == 0)
         return;
-    
+
     // Calculate peak
     float peak = 0.0f;
     for (int ch = 0; ch < numChannels; ++ch)
@@ -170,7 +176,7 @@ void TrackStrip::updateMeters(const juce::AudioBuffer<float>& buffer) noexcept
                 peak = absValue;
         }
     }
-    
+
     // Calculate RMS
     float sumSquares = 0.0f;
     const auto totalSamples = numChannels * numSamples;
@@ -183,7 +189,7 @@ void TrackStrip::updateMeters(const juce::AudioBuffer<float>& buffer) noexcept
         }
     }
     const auto rms = std::sqrt(sumSquares / static_cast<float>(totalSamples));
-    
+
     // Store atomically
     peakLevel.store(peak, std::memory_order_release);
     rmsLevel.store(rms, std::memory_order_release);

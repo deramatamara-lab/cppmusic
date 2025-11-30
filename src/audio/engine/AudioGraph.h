@@ -11,12 +11,17 @@ namespace daw::audio::dsp
     class TrackStrip;
 }
 
+namespace daw::audio::synthesis
+{
+    class Oscillator;
+}
+
 namespace daw::audio::engine
 {
 
 /**
  * @brief Audio processing graph
- * 
+ *
  * Implements JUCE AudioProcessor interface.
  * Manages collection of TrackStrip instances and sums to master bus.
  * Follows DAW_DEV_RULES: real-time safe, no allocations/locks in processBlock.
@@ -25,7 +30,7 @@ class AudioGraph : public juce::AudioProcessor
 {
 public:
     AudioGraph();
-    ~AudioGraph() override = default;
+    ~AudioGraph() override;
 
     // JUCE AudioProcessor interface
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -58,13 +63,31 @@ public:
     void setMasterGain(float gainDb) noexcept;
     [[nodiscard]] float getMasterGain() const noexcept;
 
+    // Master metering (lock-free, safe from UI thread)
+    struct MeterData
+    {
+        float peak;
+        float rms;
+    };
+    [[nodiscard]] MeterData getMasterMeter() const noexcept;
+
 private:
     std::vector<std::unique_ptr<daw::audio::dsp::TrackStrip>> trackStrips;
     std::atomic<float> masterGainLinear;
-    
+
+    // Test oscillator for basic audio verification (defined in .cpp to avoid incomplete type)
+    std::unique_ptr<daw::audio::synthesis::Oscillator> testOscillator;
+
+    // Master metering (lock-free, updated in audio thread)
+    std::atomic<float> masterPeakLevel{0.0f};
+    std::atomic<float> masterRmsLevel{0.0f};
+
+    // Pre-allocated buffers (no allocations in processBlock)
     juce::AudioBuffer<float> masterBuffer;
-    
+    std::vector<juce::AudioBuffer<float>> trackBuffers; // One per track
+
     [[nodiscard]] static float dbToLinear(float db) noexcept;
+    void updateMasterMeters(const juce::AudioBuffer<float>& buffer) noexcept;
 };
 
 } // namespace daw::audio::engine

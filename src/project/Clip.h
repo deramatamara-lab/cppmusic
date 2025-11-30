@@ -8,7 +8,7 @@ namespace daw::project
 
 /**
  * @brief Clip model
- * 
+ *
  * Represents a clip on the timeline with start time, length, and track reference.
  */
 class Clip
@@ -39,13 +39,33 @@ public:
     [[nodiscard]] std::string getLabel() const { return label; }
     void setLabel(const std::string& newLabel) { label = newLabel; }
 
+    // Fade controls
+    [[nodiscard]] double getFadeInBeats() const { return fadeInBeats; }
+    void setFadeInBeats(double newFadeInBeats) { fadeInBeats = newFadeInBeats; }
+
+    [[nodiscard]] double getFadeOutBeats() const { return fadeOutBeats; }
+    void setFadeOutBeats(double newFadeOutBeats) { fadeOutBeats = newFadeOutBeats; }
+
+    // Pattern reference (for pattern clips)
+    [[nodiscard]] uint32_t getPatternId() const { return patternId; }
+    void setPatternId(uint32_t newPatternId) { patternId = newPatternId; }
+    [[nodiscard]] bool hasPattern() const { return patternId != 0; }
+
+    // Clip color for visual distinction
+    [[nodiscard]] int getColorIndex() const { return colorIndex; }
+    void setColorIndex(int newColorIndex) { colorIndex = newColorIndex; }
+
 private:
     uint32_t id;
     uint32_t trackId;
     double startBeats;
     double lengthBeats;
     std::string label;
-    
+    uint32_t patternId = 0; // 0 means no pattern
+    double fadeInBeats = 0.0;
+    double fadeOutBeats = 0.0;
+    int colorIndex = 0; // Default color index
+
     static uint32_t nextId;
     static uint32_t generateId();
 };

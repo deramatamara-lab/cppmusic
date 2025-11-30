@@ -1,6 +1,6 @@
 #include "DesignTokens.h"
+#include "UltraDesignSystem.hpp"
 #include <cmath>
-#include <mutex>
 
 namespace daw::ui::lookandfeel
 {
@@ -119,42 +119,92 @@ namespace
         return (contrastRatio(mixed, background) >= kMin) ? mixed : toward;
     }
 
-    inline ColorTokens buildDarkColors(ColorTokens c) noexcept
+    inline juce::Colour lightenTowardsWhite(juce::Colour c, float amount) noexcept
     {
-        // Ensure consistent shadow tint & focus ring
-        c.panelShadow = juce::Colours::black;
-        c.focusRing   = c.accentSecondary.withAlpha(1.0f);
+        return c.interpolatedWith(juce::Colours::white, juce::jlimit(0.0f, 1.0f, amount));
+    }
 
-        // Derive interaction states perceptually
+    inline juce::Colour darkenTowardsBlack(juce::Colour c, float amount) noexcept
+    {
+        return c.interpolatedWith(juce::Colours::black, juce::jlimit(0.0f, 1.0f, amount));
+    }
+
+    inline ColorTokens buildDarkColors(const ultra::Tokens::Colors& u) noexcept
+    {
+        ColorTokens c;
+        c.background       = u.bg0;
+        c.backgroundAlt    = u.bg1;
+        c.panelBackground  = u.bg2;
+        c.panelHighlight   = u.bg2.brighter(0.12f);
+        c.panelBorder      = u.panelBorder;
+        c.panelShadow      = u.shadowSoft;
+
+        c.accentPrimary    = u.accentPrimary;
+        c.accentSecondary  = u.accentSecondary;
+        c.accentWarning    = u.warn;
+
+        c.textPrimary      = u.textPrimary;
+        c.textSecondary    = u.textSecondary;
+        c.textDisabled     = u.textSecondary.withAlpha(0.45f);
+
         c.accentPrimaryHover  = oklabAdjustLightness(c.accentPrimary, +0.08f);
         c.accentPrimaryActive = oklabAdjustLightness(c.accentPrimary, -0.10f);
-
-        // Readable on-accent text
-        c.onAccent = pickOnColor(c.accentPrimary, c.accentSecondary);
+        c.onAccent            = pickOnColor(c.accentPrimary, c.accentSecondary);
+        c.focusRing           = c.accentSecondary.withAlpha(1.0f);
         return c;
     }
 
-    inline ColorTokens buildLightColors(ColorTokens c) noexcept
+    inline ColorTokens buildLightColors(const ultra::Tokens::Colors& u) noexcept
     {
-        // Light theme base (use your preferred palette; this is harmonious with your brand hues)
-        c.background       = juce::Colour(0xfff6f5ff);
-        c.backgroundAlt    = juce::Colour(0xffefedfb);
-        c.panelBackground  = juce::Colour(0xffffffff);
-        c.panelHighlight   = juce::Colour(0xffefeaff);
-        c.panelBorder      = juce::Colour::fromFloatRGBA(0.0f, 0.0f, 0.0f, 0.12f);
-        c.panelShadow      = juce::Colours::black.withAlpha(1.0f);
+        auto c = buildDarkColors(u);
 
-        c.textPrimary      = juce::Colour(0xff1b1833);
-        c.textSecondary    = juce::Colour(0xff5a5670);
-        c.textDisabled     = juce::Colour(0xffa6a3b6);
+        c.background      = lightenTowardsWhite(u.bg0, 0.92f);
+        c.backgroundAlt   = lightenTowardsWhite(u.bg1, 0.85f);
+        c.panelBackground = juce::Colours::white;
+        c.panelHighlight  = lightenTowardsWhite(u.bg2, 0.75f);
+        c.panelBorder     = u.panelBorder.withAlpha(0.25f);
+        c.panelShadow     = juce::Colours::black.withAlpha(0.35f);
 
-        // Derive interaction states
-        c.accentPrimaryHover  = oklabAdjustLightness(c.accentPrimary, -0.04f); // go slightly darker on light
+        c.textPrimary     = darkenTowardsBlack(u.textPrimary, 0.65f);
+        c.textSecondary   = darkenTowardsBlack(u.textSecondary, 0.45f);
+        c.textDisabled    = darkenTowardsBlack(u.textSecondary, 0.20f);
+
+        c.accentPrimaryHover  = oklabAdjustLightness(c.accentPrimary, -0.04f);
         c.accentPrimaryActive = oklabAdjustLightness(c.accentPrimary, -0.12f);
-
-        c.focusRing       = c.accentSecondary;
-        c.onAccent        = pickOnColor(c.accentPrimary, c.accentSecondary);
+        c.focusRing           = c.accentSecondary;
+        c.onAccent            = pickOnColor(c.accentPrimary, c.accentSecondary);
         return c;
+    }
+
+    inline SpacingTokens buildSpacingTokens(const ultra::Tokens::Spacing& s) noexcept
+    {
+        SpacingTokens spacing;
+        spacing.xxs = s.s4;
+        spacing.xs  = s.s8;
+        spacing.sm  = s.s12;
+        spacing.md  = s.s16;
+        spacing.lg  = s.s24;
+        spacing.xl  = s.s32;
+        return spacing;
+    }
+
+    inline RadiusTokens buildRadiusTokens(const ultra::Tokens::Radius& r) noexcept
+    {
+        RadiusTokens radii;
+        radii.small  = r.s;
+        radii.medium = r.m;
+        radii.large  = r.l;
+        return radii;
+    }
+
+    inline TypographyTokens buildTypographyTokens(const ultra::Tokens::Fonts& f) noexcept
+    {
+        TypographyTokens type;
+        type.smallSize   = f.size12;
+        type.bodySize    = f.size14;
+        type.titleSize   = f.size18;
+        type.headingSize = f.size24;
+        return type;
     }
 }
 
@@ -162,29 +212,26 @@ namespace
 
 const DesignTokens& getDesignTokens(Theme theme) noexcept
 {
-    static std::once_flag onceDark, onceLight;
-    static DesignTokens dark, light;
+    thread_local DesignTokens darkCache;
+    thread_local DesignTokens lightCache;
 
-    if (theme == Theme::Dark)
+    const auto& ultraTokens = ultra::tokens();
+    auto rebuild = [&] (DesignTokens& target, Theme th) -> DesignTokens&
     {
-        std::call_once(onceDark, [] {
-            DesignTokens t;
-            t.theme = Theme::Dark;
-            t.colours = buildDarkColors(t.colours);
-            dark = t;
-        });
-        return dark;
-    }
-    else
-    {
-        std::call_once(onceLight, [] {
-            DesignTokens t;
-            t.theme = Theme::Light;
-            t.colours = buildLightColors(t.colours);
-            light = t;
-        });
-        return light;
-    }
+        target.theme   = th;
+        target.colours = (th == Theme::Dark)
+            ? buildDarkColors(ultraTokens.color)
+            : buildLightColors(ultraTokens.color);
+        target.spacing = buildSpacingTokens(ultraTokens.space);
+        target.radii   = buildRadiusTokens(ultraTokens.radius);
+        target.type    = buildTypographyTokens(ultraTokens.font);
+        // Elevation tokens currently do not exist in Ultra spec; keep defaults.
+        return target;
+    };
+
+    return (theme == Theme::Dark)
+        ? rebuild(darkCache, Theme::Dark)
+        : rebuild(lightCache, Theme::Light);
 }
 
 } // namespace daw::ui::lookandfeel

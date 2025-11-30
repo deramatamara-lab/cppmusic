@@ -9,7 +9,7 @@ namespace daw::ui
 
 /**
  * @brief Main JUCE Application class
- * 
+ *
  * Manages the application lifecycle and main window creation.
  * Follows DAW_DEV_RULES: single-instance, clean shutdown, proper initialization.
  */
@@ -31,9 +31,10 @@ public:
 
 private:
     std::unique_ptr<MainWindow> mainWindow;
-    
+
     void createMainWindow();
+    void configureServices();
+    void shutdownServices();
 };
 
 } // namespace daw::ui
-

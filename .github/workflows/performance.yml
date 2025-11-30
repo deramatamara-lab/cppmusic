@@ -1,0 +1,417 @@
+name: Performance Testing & Benchmarks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly performance tests
+    - cron: '0 2 * * *'
+
+env:
+  # Performance test configuration
+  MAX_ALLOWED_LATENCY: 10.0
+  MAX_ALLOWED_CPU: 25.0
+  MAX_MEMORY_MB: 100
+  REGRESSION_THRESHOLD: 5.0
+
+jobs:
+  performance-quick:
+    name: Quick Performance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libasound2-dev \
+          libfreetype6-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          pkg-config \
+          valgrind
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_TESTS=ON \
+          -DBUILD_PERFORMANCE_TESTS=ON \
+          -DCMAKE_CXX_FLAGS="-O3 -march=native -DNDEBUG"
+
+    - name: Build
+      run: cmake --build build --target all -j$(nproc)
+
+    - name: Run Quick Performance Tests
+      run: |
+        cd build
+        ./performance_tests --quick \
+          --max-latency=${MAX_ALLOWED_LATENCY} \
+          --max-cpu=${MAX_ALLOWED_CPU} \
+          --max-memory=${MAX_MEMORY_MB} \
+          --regression-threshold=${REGRESSION_THRESHOLD}
+
+    - name: Upload Performance Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-results-quick
+        path: |
+          build/performance_report.json
+          build/performance_report.html
+          build/junit_performance.xml
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: build/junit_performance.xml
+
+  performance-comprehensive:
+    name: Comprehensive Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[perf-test]')
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0  # Need full history for regression analysis
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libasound2-dev \
+          libfreetype6-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          pkg-config \
+          valgrind \
+          perf-tools-unstable \
+          linux-tools-generic
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DBUILD_TESTS=ON \
+          -DBUILD_PERFORMANCE_TESTS=ON \
+          -DENABLE_PROFILING=ON \
+          -DCMAKE_CXX_FLAGS="-O3 -march=native -DNDEBUG -g"
+
+    - name: Build
+      run: cmake --build build --target all -j$(nproc)
+
+    - name: Download Performance Baseline
+      uses: actions/download-artifact@v4
+      with:
+        name: performance-baseline
+        path: build/
+      continue-on-error: true
+
+    - name: Run Comprehensive Performance Tests
+      run: |
+        cd build
+        ./performance_tests --comprehensive \
+          --enable-stress-tests \
+          --enable-long-running \
+          --profile-cpu \
+          --profile-memory \
+          --max-latency=${MAX_ALLOWED_LATENCY} \
+          --max-cpu=${MAX_ALLOWED_CPU} \
+          --max-memory=${MAX_MEMORY_MB} \
+          --regression-threshold=${REGRESSION_THRESHOLD}
+
+    - name: Run Memory Leak Detection
+      run: |
+        cd build
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all \
+          --xml=yes --xml-file=valgrind_results.xml \
+          ./performance_tests --memory-only
+
+    - name: Profile with perf
+      run: |
+        cd build
+        # CPU profiling
+        perf record -g -o perf_cpu.data ./performance_tests --cpu-profile
+        perf report -i perf_cpu.data --stdio > cpu_profile.txt
+
+        # Cache analysis
+        perf stat -e cache-references,cache-misses,cycles,instructions \
+          ./performance_tests --cache-analysis > cache_stats.txt 2>&1
+      continue-on-error: true
+
+    - name: Generate Performance Dashboard
+      run: |
+        cd build
+        python3 ../scripts/generate_performance_dashboard.py \
+          --input performance_report.json \
+          --baseline performance_baseline.csv \
+          --output performance_dashboard.html
+      continue-on-error: true
+
+    - name: Check Performance Regressions
+      run: |
+        cd build
+        python3 ../scripts/check_regressions.py \
+          --current performance_report.json \
+          --baseline performance_baseline.csv \
+          --threshold ${REGRESSION_THRESHOLD} \
+          --output regression_report.json
+
+    - name: Update Performance Baseline
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        cd build
+        cp performance_metrics.csv performance_baseline.csv
+
+    - name: Upload Performance Baseline
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-baseline
+        path: build/performance_baseline.csv
+        retention-days: 90
+
+    - name: Upload Comprehensive Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-results-comprehensive
+        path: |
+          build/performance_report.json
+          build/performance_report.html
+          build/performance_dashboard.html
+          build/junit_performance.xml
+          build/valgrind_results.xml
+          build/cpu_profile.txt
+          build/cache_stats.txt
+          build/regression_report.json
+
+    - name: Comment Performance Results on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const report = JSON.parse(fs.readFileSync('build/performance_report.json', 'utf8'));
+            const regressions = JSON.parse(fs.readFileSync('build/regression_report.json', 'utf8'));
+
+            let comment = '## 🚀 Performance Test Results\n\n';
+
+            // Summary
+            const hasRegressions = regressions.some(r => r.isRegression);
+            if (hasRegressions) {
+              comment += '⚠️ **Performance regressions detected!**\n\n';
+            } else {
+              comment += '✅ **No performance regressions detected**\n\n';
+            }
+
+            // Key metrics
+            comment += '### Key Metrics\n';
+            comment += '| Component | Current | Baseline | Change |\n';
+            comment += '|-----------|---------|----------|---------|\n';
+
+            for (const regression of regressions.slice(0, 10)) {
+              const emoji = regression.isRegression ? '🔴' :
+                           regression.percentageChange < -5 ? '🟢' : '🟡';
+              comment += `| ${regression.testName} | ${regression.currentValue.toFixed(2)}ms | ${regression.baselineValue.toFixed(2)}ms | ${emoji} ${regression.percentageChange.toFixed(1)}% |\n`;
+            }
+
+            comment += '\n### Memory Usage\n';
+            comment += `- **Current:** ${(report.totalMemoryUsage / (1024*1024)).toFixed(1)}MB\n`;
+            comment += `- **Peak:** ${(report.peakMemoryUsage / (1024*1024)).toFixed(1)}MB\n`;
+
+            if (regressions.length > 10) {
+              comment += `\n*Showing top 10 results. Full report available in artifacts.*`;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not post performance comment:', error);
+          }
+
+  benchmark-comparison:
+    name: Benchmark Against Previous Versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+
+    strategy:
+      matrix:
+        comparison: [main, previous-release]
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ matrix.comparison }}
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libasound2-dev \
+          libfreetype6-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          pkg-config
+
+    - name: Build and Benchmark
+      run: |
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_PERFORMANCE_TESTS=ON
+        cmake --build build --target all -j$(nproc)
+        cd build
+        ./performance_tests --benchmark-only --output benchmark_${{ matrix.comparison }}.json
+
+    - name: Upload Benchmark Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-${{ matrix.comparison }}
+        path: build/benchmark_${{ matrix.comparison }}.json
+
+  security-performance:
+    name: Security & Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          libasound2-dev \
+          libfreetype6-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libgl1-mesa-dev \
+          pkg-config \
+          cppcheck \
+          clang-tidy
+
+    - name: Configure CMake with Security Flags
+      run: |
+        cmake -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_TESTS=ON \
+          -DENABLE_SECURITY_ANALYSIS=ON \
+          -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g"
+
+    - name: Build
+      run: cmake --build build --target all -j$(nproc)
+
+    - name: Run AddressSanitizer Tests
+      run: |
+        cd build
+        export ASAN_OPTIONS=detect_leaks=1:abort_on_error=1:disable_coredump=0
+        ./performance_tests --security-tests
+
+    - name: Static Analysis
+      run: |
+        cppcheck --enable=all --xml --xml-version=2 \
+          --suppress=missingIncludeSystem \
+          --suppress=unusedFunction \
+          src/ 2> cppcheck_results.xml
+
+        clang-tidy src/**/*.cpp src/**/*.h \
+          -checks='-*,clang-analyzer-*,performance-*,readability-*' \
+          -- -I src/ > clang_tidy_results.txt
+      continue-on-error: true
+
+    - name: Upload Security Analysis
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-analysis
+        path: |
+          cppcheck_results.xml
+          clang_tidy_results.txt
+
+  performance-metrics:
+    name: Publish Performance Metrics
+    runs-on: ubuntu-latest
+    needs: [performance-quick, performance-comprehensive]
+    if: always()
+
+    steps:
+    - name: Download Performance Results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: performance-results-*
+        merge-multiple: true
+
+    - name: Parse and Publish Metrics
+      run: |
+        # Parse JSON results and send to monitoring system
+        if [ -f performance_report.json ]; then
+          python3 -c "
+          import json
+          import os
+
+          with open('performance_report.json') as f:
+              data = json.load(f)
+
+          # Extract key metrics for monitoring
+          metrics = []
+          for name, time in data.get('averageTimes', {}).items():
+              metrics.append(f'performance_avg_time{{component=\"{name}\"}} {time}')
+
+          for name, time in data.get('peakTimes', {}).items():
+              metrics.append(f'performance_peak_time{{component=\"{name}\"}} {time}')
+
+          metrics.append(f'performance_memory_usage {data.get(\"totalMemoryUsage\", 0)}')
+          metrics.append(f'performance_memory_peak {data.get(\"peakMemoryUsage\", 0)}')
+
+          # Write metrics file
+          with open('performance.metrics', 'w') as f:
+              f.write('\n'.join(metrics))
+          "
+        fi
+
+    - name: Upload Metrics
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-metrics
+        path: performance.metrics

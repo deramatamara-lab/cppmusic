@@ -15,42 +15,58 @@ StepSequencer::StepSequencer()
 void StepSequencer::paint(juce::Graphics& g)
 {
     using namespace daw::ui::lookandfeel::DesignSystem;
-    
+
     // Background
     g.fillAll(toColour(Colors::background));
-    
-    const auto padding = Spacing::small;
-    
+
+    const auto padding = static_cast<float>(Spacing::small);
+
     // Draw steps
     for (int i = 0; i < numSteps; ++i)
     {
         const auto x = padding + i * (stepWidth + padding);
         const auto rect = juce::Rectangle<float>(x, padding, stepWidth, stepHeight);
-        
-        const auto& step = steps[i];
-        
-        // Background
+
+        const auto& step = steps[static_cast<size_t>(i)];
+
+        // Base background – slight bar grouping every 4 steps
+        const bool isBarStart = (i % 4) == 0;
+        auto baseColour = juce::Colour(Colors::surface);
+        if (isBarStart)
+            baseColour = juce::Colour(Colors::surface1);
+
         if (i == currentPlayPosition)
-        {
-            g.setColour(toColour(Colors::primary).withAlpha(0.3f));
-        }
-        else
-        {
-            g.setColour(toColour(Colors::surface));
-        }
+            baseColour = juce::Colour(Colors::primary).withAlpha(0.35f);
+
+        g.setColour(baseColour);
         g.fillRoundedRectangle(rect, Radii::small);
-        
-        // Active indicator
+
+        // Active indicator: pill with velocity-based brightness
         if (step.active)
         {
-            g.setColour(toColour(Colors::accent));
-            g.fillEllipse(rect.reduced(4.0f));
+            const float velNorm = juce::jlimit(0.0f, 1.0f, static_cast<float>(step.velocity) / 127.0f);
+            auto accent = juce::Colour(Colors::accent);
+            accent = accent.interpolatedWith(juce::Colours::white, velNorm * 0.25f);
+
+            auto filled = rect.reduced(4.0f);
+            juce::ColourGradient grad(accent.brighter(0.2f),
+                                      filled.getX(), filled.getY(),
+                                      accent.darker(0.3f),
+                                      filled.getX(), filled.getBottom(),
+                                      false);
+            g.setGradientFill(grad);
+            g.fillRoundedRectangle(filled, Radii::small);
+
+            // Top highlight
+            auto hi = filled.withHeight(juce::jlimit(2.0f, 8.0f, filled.getHeight() * 0.2f));
+            g.setColour(juce::Colour(Colors::glassHighlight));
+            g.fillRoundedRectangle(hi, Radii::small);
         }
-        
+
         // Border
         g.setColour(toColour(Colors::outline));
         g.drawRoundedRectangle(rect, Radii::small, 1.0f);
-        
+
         // Step number
         g.setColour(toColour(Colors::textSecondary));
         g.setFont(Typography::caption);
@@ -73,8 +89,10 @@ void StepSequencer::mouseDown(const juce::MouseEvent& e)
     const auto stepIndex = getStepAtPosition(e.getPosition());
     if (stepIndex >= 0 && stepIndex < numSteps)
     {
-        steps[stepIndex].active = !steps[stepIndex].active;
+        steps[static_cast<size_t>(stepIndex)].active = !steps[static_cast<size_t>(stepIndex)].active;
         updatePattern();
+        if (onPatternChanged)
+            onPatternChanged();
         repaint();
     }
 }
@@ -177,31 +195,92 @@ void StepSequencer::updateFromPattern()
 {
     if (!pattern)
         return;
-    
-    // TODO: Convert pattern notes to step data
-    // For now, this is a placeholder
+
+    // Clear existing steps
+    steps.clear();
+    steps.resize(static_cast<size_t>(numSteps));
+
+    // Convert pattern MIDI notes to step data
+    const auto& patternNotes = pattern->getNotes();
+    for (const auto& midiNote : patternNotes)
+    {
+        const auto stepIndex = static_cast<int>(std::floor(midiNote.startBeat));
+        if (stepIndex >= 0 && stepIndex < numSteps)
+        {
+            StepData stepData;
+            stepData.active = true;
+            stepData.velocity = midiNote.velocity;
+            stepData.probability = juce::jlimit(0.0f, 1.0f, midiNote.probability);
+            if (!juce::approximatelyEqual(midiNote.microTiming, 0.0f))
+            {
+                stepData.microTiming = juce::jlimit(-1.0f, 1.0f, midiNote.microTiming);
+            }
+            else
+            {
+                const auto offsetBeats = midiNote.startBeat - stepIndex;
+                stepData.microTiming = juce::jlimit(-1.0f, 1.0f, static_cast<float>(offsetBeats * 2.0));
+            }
+            stepData.trigCondition = midiNote.trigCondition;
+            steps[static_cast<size_t>(stepIndex)] = stepData;
+        }
+    }
+
+    repaint();
 }
 
 void StepSequencer::updatePattern()
 {
     if (!pattern)
         return;
-    
-    // TODO: Convert step data to pattern notes
-    // For now, this is a placeholder
+
+    pattern->setNotes(buildMidiNotesFromSteps());
+    commitSteps();
 }
 
 int StepSequencer::getStepAtPosition(const juce::Point<int>& pos) const
 {
     const auto padding = static_cast<float>(daw::ui::lookandfeel::DesignSystem::Spacing::small);
     const auto x = static_cast<float>(pos.x) - padding;
-    
+
     if (x < 0 || stepWidth <= 0)
         return -1;
-    
+
     const auto stepIndex = static_cast<int>(x / (stepWidth + padding));
     return (stepIndex >= 0 && stepIndex < numSteps) ? stepIndex : -1;
 }
 
-} // namespace daw::ui::components
+void StepSequencer::commitSteps()
+{
+    if (onStepsCommitted)
+    {
+        onStepsCommitted(buildMidiNotesFromSteps());
+    }
+}
 
+std::vector<daw::project::Pattern::MIDINote> StepSequencer::buildMidiNotesFromSteps() const
+{
+    std::vector<daw::project::Pattern::MIDINote> notes;
+    notes.reserve(steps.size());
+
+    for (size_t i = 0; i < steps.size(); ++i)
+    {
+        const auto& step = steps[i];
+        if (!step.active)
+            continue;
+
+        daw::project::Pattern::MIDINote midiNote;
+        midiNote.note = 60; // TODO configurable pitch per lane
+        midiNote.velocity = step.velocity;
+        midiNote.startBeat = static_cast<double>(i) + (step.microTiming * 0.5);
+        midiNote.lengthBeats = 0.25;
+        midiNote.channel = 0;
+        midiNote.probability = juce::jlimit(0.0f, 1.0f, step.probability);
+        midiNote.microTiming = juce::jlimit(-1.0f, 1.0f, step.microTiming);
+        midiNote.trigCondition = step.trigCondition;
+        notes.push_back(midiNote);
+    }
+
+    return notes;
+}
+
+} // namespace daw::ui::components

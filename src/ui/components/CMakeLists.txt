@@ -11,6 +11,12 @@ set(UI_COMPONENTS_SOURCES
     Panel.cpp
     Dial.cpp
     Meter.cpp
+    StatusStrip.cpp
+    PremiumKnob.cpp
+    NeuroSlider.cpp
+    CommandPalette.cpp
+    AppCommands.cpp
+    DrumMachine.cpp
 )
 
 set(UI_COMPONENTS_HEADERS
@@ -24,6 +30,12 @@ set(UI_COMPONENTS_HEADERS
     Panel.h
     Dial.h
     Meter.h
+    StatusStrip.h
+    PremiumKnob.h
+    NeuroSlider.h
+    CommandPalette.h
+    AppCommands.h
+    DrumMachine.h
 )
 
 add_library(ui_components STATIC
@@ -37,11 +49,13 @@ target_include_directories(ui_components PUBLIC
 
 target_link_libraries(ui_components PUBLIC
     ui_lookandfeel
+    ui_core
+    ui_effects
 )
 
 # Link JUCE modules
 if(TARGET juce::juce_core)
-    target_link_libraries(ui_components PUBLIC 
+    target_link_libraries(ui_components PUBLIC
         juce::juce_gui_basics
         juce::juce_graphics
         juce::juce_core

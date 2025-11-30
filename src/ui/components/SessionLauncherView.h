@@ -3,7 +3,6 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "ClipLauncherSystem.h"
-#include "../lookandfeel/DesignTokens.h"
 
 namespace daw::ui::components
 {
@@ -22,7 +21,6 @@ public:
     void setLooping(bool shouldLoop);
 
 private:
-    const daw::ui::lookandfeel::DesignTokens* tokens { nullptr };
     ClipLauncherSystem clipLauncher;
     juce::Label headerLabel;
 

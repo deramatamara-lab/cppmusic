@@ -44,14 +44,31 @@ public:
         transport.setPositionInBeats(0.0);
         transport.setTempo(120.0);
         transport.play();
-        
+
         const double sampleRate = 44100.0;
         const int numSamples = 4410; // 0.1 seconds at 44.1kHz
-        
+
         transport.updatePosition(numSamples, sampleRate);
         const auto positionAfter = transport.getPositionInBeats();
         expect(positionAfter > 0.0, "Position should advance during playback");
         expectWithinAbsoluteError(positionAfter, 0.2, 0.1, "Position should be approximately 0.2 beats (120 BPM = 2 beats/sec, 0.1 sec = 0.2 beats)");
+
+        beginTest("Position update when stopped");
+        transport.stop();
+        const auto positionBefore = transport.getPositionInBeats();
+        transport.updatePosition(numSamples, sampleRate);
+        const auto positionAfterStop = transport.getPositionInBeats();
+        expectWithinAbsoluteError(positionAfterStop, positionBefore, 0.01, "Position should not advance when stopped");
+
+        beginTest("Position wrapping");
+        transport.setPositionInBeats(1000.0);
+        expectWithinAbsoluteError(transport.getPositionInBeats(), 1000.0, 0.01, "Position should handle large values");
+
+        beginTest("Thread safety - rapid tempo changes");
+        transport.setTempo(60.0);
+        transport.setTempo(180.0);
+        transport.setTempo(120.0);
+        expectWithinAbsoluteError(transport.getTempo(), 120.0, 0.1, "Tempo should be stable after rapid changes");
     }
 };
 

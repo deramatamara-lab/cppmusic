@@ -22,5 +22,6 @@ target_include_directories(ai_inference PUBLIC
 target_link_libraries(ai_inference PUBLIC
     ai_models
     core_utilities
+    ai_config
 )
 

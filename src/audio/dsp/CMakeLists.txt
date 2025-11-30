@@ -22,10 +22,8 @@ target_include_directories(audio_dsp PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(TARGET juce::juce_core)
-    target_link_libraries(audio_dsp PUBLIC
-        juce::juce_audio_processors
-        juce::juce_core
-    )
-endif()
+target_link_libraries(audio_dsp PUBLIC
+    juce::juce_core
+    juce::juce_audio_basics
+)
 

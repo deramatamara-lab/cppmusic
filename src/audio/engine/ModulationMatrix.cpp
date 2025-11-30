@@ -18,9 +18,9 @@ void ModulationMatrix::prepareToPlay(double sampleRate, int maxBlockSize) noexce
 {
     currentSampleRate = sampleRate;
     currentBlockSize = maxBlockSize;
-    
+
     modulationBuffer.resize(maxBlockSize);
-    
+
     // Prepare all modulators
     for (auto& slot : slots)
     {
@@ -40,7 +40,7 @@ void ModulationMatrix::releaseResources() noexcept
             slot.modulator->releaseResources();
         }
     }
-    
+
     modulationBuffer.clear();
 }
 
@@ -48,16 +48,16 @@ int ModulationMatrix::addSlot(daw::audio::dsp::Modulator* modulator, float* targ
 {
     if (modulator == nullptr || targetParameter == nullptr)
         return -1;
-    
+
     if (static_cast<int>(slots.size()) >= maxSlots)
         return -1;
-    
+
     ModulationSlot slot;
     slot.modulator = modulator;
     slot.targetParameter = targetParameter;
     slot.depth = std::clamp(depth, 0.0f, 1.0f);
     slot.enabled = true;
-    
+
     slots.push_back(slot);
     return static_cast<int>(slots.size() - 1);
 }
@@ -90,19 +90,21 @@ void ModulationMatrix::processBlock(int numSamples, float* baseValues) noexcept
 {
     if (numSamples == 0 || baseValues == nullptr)
         return;
-    
-    // Ensure modulation buffer is large enough
+
+    // Buffer should already be sized from prepareToPlay (no allocation here!)
     if (static_cast<int>(modulationBuffer.size()) < numSamples)
     {
-        modulationBuffer.resize(numSamples);
+        // Safety check: if buffer wasn't prepared, skip processing
+        // This should never happen if prepareToPlay was called correctly
+        return;
     }
-    
+
     // Process each active slot
     for (const auto& slot : slots)
     {
         if (!slot.enabled || slot.modulator == nullptr || slot.targetParameter == nullptr)
             continue;
-        
+
         processSlot(slot, numSamples, baseValues);
     }
 }
@@ -112,11 +114,11 @@ void ModulationMatrix::processSlot(const ModulationSlot& slot, int numSamples, f
     // Generate modulation signal
     if (!slot.modulator->processBlock(modulationBuffer.data(), numSamples))
         return;
-    
+
     // Apply modulation to target parameter
     const auto depth = slot.depth;
     const auto baseValue = *slot.targetParameter;
-    
+
     for (int i = 0; i < numSamples; ++i)
     {
         const auto modValue = modulationBuffer[i] * depth;

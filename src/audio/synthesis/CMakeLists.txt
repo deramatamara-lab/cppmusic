@@ -23,6 +23,10 @@ target_link_libraries(audio_synthesis PUBLIC
     audio_processors
 )
 
-# Link JUCE if available
-# target_link_libraries(audio_synthesis PUBLIC juce::juce_audio_basics)
-
+# Link JUCE modules if available
+if(TARGET juce::juce_core)
+    target_link_libraries(audio_synthesis PUBLIC
+        juce::juce_audio_basics
+        juce::juce_core
+    )
+endif()

@@ -5,6 +5,7 @@ set(UI_VIEWS_SOURCES
     TransportBar.cpp
     BrowserPanel.cpp
     ArrangeView.cpp
+    TrackHeaderComponent.cpp
     InspectorPanel.cpp
     MixerView.cpp
     MixerStrip.cpp
@@ -16,6 +17,7 @@ set(UI_VIEWS_HEADERS
     TransportBar.h
     BrowserPanel.h
     ArrangeView.h
+    TrackHeaderComponent.h
     InspectorPanel.h
     MixerView.h
     MixerStrip.h
@@ -35,6 +37,10 @@ target_link_libraries(ui_views PUBLIC
     ui_lookandfeel
     project_model
     audio_engine
+    ui_components
+    plugins
+    ai_inference
+    ai_config
 )
 
 if(TARGET juce::juce_core)

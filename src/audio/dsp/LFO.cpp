@@ -41,21 +41,21 @@ bool LFO::processBlock(float* output, int numSamples) noexcept
         std::fill(output, output + numSamples, 0.0f);
         return false;
     }
-    
+
     const auto wf = waveform.load(std::memory_order_acquire);
     const auto phaseInc = getPhaseIncrement();
     const auto depthValue = depth.load(std::memory_order_acquire);
-    
+
     for (int i = 0; i < numSamples; ++i)
     {
         output[i] = generateSample(phase, wf) * depthValue;
         phase += phaseInc;
-        
+
         // Wrap phase to [0, 1)
         if (phase >= 1.0f)
             phase -= 1.0f;
     }
-    
+
     return true;
 }
 
@@ -63,7 +63,7 @@ float LFO::getCurrentValue() const noexcept
 {
     if (!isEnabled())
         return 0.0f;
-    
+
     const auto wf = waveform.load(std::memory_order_acquire);
     const auto depthValue = depth.load(std::memory_order_acquire);
     return generateSample(phase, wf) * depthValue;
@@ -124,50 +124,53 @@ float LFO::generateSample(float phaseValue, Waveform wf) const noexcept
     {
         case Waveform::Sine:
             return std::sin(phaseValue * 2.0f * std::numbers::pi_v<float>);
-            
+
         case Waveform::Triangle:
             if (phaseValue < 0.5f)
                 return 4.0f * phaseValue - 1.0f;
             else
                 return 3.0f - 4.0f * phaseValue;
-                
+
         case Waveform::Sawtooth:
             return 2.0f * phaseValue - 1.0f;
-            
+
         case Waveform::SawtoothInverse:
             return 1.0f - 2.0f * phaseValue;
-            
+
         case Waveform::Square:
             return phaseValue < 0.5f ? -1.0f : 1.0f;
-            
+
         case Waveform::Pulse:
         {
             const auto pw = pulseWidth.load(std::memory_order_acquire);
             return phaseValue < pw ? -1.0f : 1.0f;
         }
-        
+
         case Waveform::Noise:
         {
-            // Simple pseudo-random using linear congruential generator (real-time safe)
-            // Using a simple LCG for deterministic, fast noise
-            static uint32_t noiseSeed = 12345;
-            noiseSeed = noiseSeed * 1103515245u + 12345u;
+            // High-quality pseudo-random using improved LCG (real-time safe, deterministic)
+            // Uses better constants for improved statistical properties
+            static thread_local uint32_t noiseSeed = 12345;
+            noiseSeed = noiseSeed * 1664525u + 1013904223u; // Better LCG constants
             const auto normalized = static_cast<float>(noiseSeed & 0x7FFFFFFFu) / 2147483647.0f;
-            return normalized * 2.0f - 1.0f;
+
+            // Apply slight filtering to reduce aliasing in noise
+            lastNoiseValue = lastNoiseValue * 0.1f + normalized * 0.9f;
+            return (lastNoiseValue * 2.0f - 1.0f);
         }
-        
+
         case Waveform::SampleAndHold:
         {
             // Update every N samples (roughly at frequency rate)
             const auto freq = frequencyHz.load(std::memory_order_acquire);
             const auto updateRate = static_cast<int>(currentSampleRate / freq);
-            
+
             if (sampleHoldCounter >= updateRate)
             {
                 sampleHoldCounter = 0;
-                // Simple LCG for S&H (real-time safe)
-                static uint32_t shSeed = 67890;
-                shSeed = shSeed * 1103515245u + 12345u;
+                // High-quality LCG for S&H (real-time safe, deterministic)
+                static thread_local uint32_t shSeed = 67890;
+                shSeed = shSeed * 1664525u + 1013904223u; // Better LCG constants
                 const auto normalized = static_cast<float>(shSeed & 0x7FFFFFFFu) / 2147483647.0f;
                 lastSampleHoldValue = normalized * 2.0f - 1.0f;
             }
@@ -175,10 +178,10 @@ float LFO::generateSample(float phaseValue, Waveform wf) const noexcept
             {
                 ++sampleHoldCounter;
             }
-            
+
             return lastSampleHoldValue;
         }
-        
+
         default:
             return 0.0f;
     }

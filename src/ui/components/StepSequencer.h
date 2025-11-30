@@ -5,13 +5,14 @@
 #include "../../project/Pattern.h"
 #include <vector>
 #include <memory>
+#include <functional>
 
 namespace daw::ui::components
 {
 
 /**
  * @brief FL-style step sequencer
- * 
+ *
  * Advanced step sequencer with probability, micro-timing, and trig conditions.
  * Follows DAW_DEV_RULES: professional UX, 60fps performance.
  */
@@ -70,6 +71,16 @@ public:
      */
     void setPattern(std::shared_ptr<daw::project::Pattern> pattern);
 
+    /**
+     * @brief Callback when pattern is changed by step toggling
+     */
+    std::function<void()> onPatternChanged;
+
+    /**
+     * @brief Callback fired with the full MIDI note list whenever steps are committed.
+     */
+    std::function<void(const std::vector<daw::project::Pattern::MIDINote>&)> onStepsCommitted;
+
 private:
     void timerCallback() override;
     [[nodiscard]] double calculateStepDurationMs(double bpm) const noexcept;
@@ -82,12 +93,14 @@ private:
     double millisecondsPerStep{125.0};
     double lastStepAdvanceTimeMs{0.0};
     bool isPlaying{false};
-    
+
     float stepWidth{30.0f};
     float stepHeight{30.0f};
-    
+
     void updateFromPattern();
     void updatePattern();
+    void commitSteps();
+    [[nodiscard]] std::vector<daw::project::Pattern::MIDINote> buildMidiNotesFromSteps() const;
     [[nodiscard]] int getStepAtPosition(const juce::Point<int>& pos) const;
 };
 

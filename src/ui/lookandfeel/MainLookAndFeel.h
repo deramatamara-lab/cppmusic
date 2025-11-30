@@ -10,7 +10,7 @@ namespace daw::ui::lookandfeel
 /**
  * Premium LookAndFeel bound to the DesignTokens theme system.
  */
-class MainLookAndFeel final : public CustomLookAndFeel
+class MainLookAndFeel : public CustomLookAndFeel
 {
 public:
     explicit MainLookAndFeel(Theme theme = Theme::Dark);

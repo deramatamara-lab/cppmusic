@@ -1,5 +1,7 @@
 #include "App.h"
 #include "../audio/engine/EngineContext.h"
+#include "../core/ServiceLocator.h"
+#include "animation/AdaptiveAnimationService.h"
 
 namespace daw::ui
 {
@@ -7,6 +9,37 @@ namespace daw::ui
 const juce::String App::getApplicationName()
 {
     return "DAW Project";
+}
+
+void App::configureServices()
+{
+    auto& locator = core::ServiceLocator::getInstance();
+    locator.initializeServices();
+
+    if (locator.getFeatureFlag("animation"))
+    {
+        auto animationService = std::make_shared<animation::AdaptiveAnimationService>();
+        if (!animationService->initialize())
+        {
+            juce::Logger::writeToLog("AdaptiveAnimationService failed to initialize; GPU animations disabled");
+        }
+        else
+        {
+            locator.registerService<animation::AdaptiveAnimationService>(animationService);
+        }
+    }
+}
+
+void App::shutdownServices()
+{
+    auto& locator = core::ServiceLocator::getInstance();
+    if (auto animationService = locator.getService<animation::AdaptiveAnimationService>())
+    {
+        animationService->shutdown();
+        locator.unregisterService<animation::AdaptiveAnimationService>();
+    }
+
+    locator.shutdownServices();
 }
 
 const juce::String App::getApplicationVersion()
@@ -21,11 +54,13 @@ bool App::moreThanOneInstanceAllowed()
 
 void App::initialise(const juce::String& /*commandLine*/)
 {
+    configureServices();
     createMainWindow();
 }
 
 void App::shutdown()
 {
+    shutdownServices();
     mainWindow = nullptr;
 }
 
@@ -45,7 +80,7 @@ void App::createMainWindow()
     try
     {
         auto engineContext = std::make_shared<daw::audio::engine::EngineContext>();
-        
+
         // Initialize engine before creating window (but don't fail if audio init fails)
         if (!engineContext->initialise())
         {
@@ -54,7 +89,7 @@ void App::createMainWindow()
                 "Audio Initialization Failed",
                 "Failed to initialize audio device. The application may not work correctly.");
         }
-        
+
         mainWindow = std::make_unique<MainWindow>(getApplicationName(), engineContext);
         if (mainWindow != nullptr)
         {

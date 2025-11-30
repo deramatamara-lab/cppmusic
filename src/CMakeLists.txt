@@ -1,16 +1,19 @@
 # Source code modules
 
+# Core module (must be first for dependencies)
+add_subdirectory(core)
+
 # Audio module
 add_subdirectory(audio)
 
 # UI module
 add_subdirectory(ui)
 
+# Integration module (connects audio, UI, and core)
+add_subdirectory(integration)
+
 # AI module
 add_subdirectory(ai)
-
-# Core module
-add_subdirectory(core)
 
 # Project module
 add_subdirectory(project)
@@ -18,6 +21,8 @@ add_subdirectory(project)
 # Plugins module
 add_subdirectory(plugins)
 
-# Main application
-add_subdirectory(main)
+# Main application (optional)
+if(BUILD_MAIN_APP)
+    add_subdirectory(main)
+endif()
 

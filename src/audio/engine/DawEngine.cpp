@@ -2,6 +2,7 @@
 #include "../dsp/TrackStrip.h"
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 
 namespace daw::audio::engine
 {
@@ -17,20 +18,20 @@ public:
                                           int numSamples, const juce::AudioIODeviceCallbackContext& context) override
     {
         juce::ignoreUnused(inputChannelData, numInputChannels, context);
-        
+
         if (outputChannelData == nullptr || numOutputChannels == 0 || numSamples == 0)
             return;
-        
+
         auto startTime = std::chrono::high_resolution_clock::now();
-        
+
         juce::AudioBuffer<float> buffer(const_cast<float* const*>(outputChannelData), numOutputChannels, numSamples);
         juce::MidiBuffer midiMessages;
-        
+
         engine.processBlock(buffer, midiMessages);
-        
+
         auto endTime = std::chrono::high_resolution_clock::now();
         auto processTime = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-        
+
         auto* device = engine.deviceManager.getCurrentAudioDevice();
         const auto sampleRate = device != nullptr ? device->getCurrentSampleRate() : 44100.0;
         engine.updateCpuLoad(processTime, numSamples, sampleRate);
@@ -77,7 +78,7 @@ bool DawEngine::initialise()
     juce::String error = deviceManager.initialiseWithDefaultDevices(0, 2);
     if (error.isNotEmpty())
         return false;
-    
+
     deviceManager.addAudioCallback(audioCallback.get());
     return true;
 }
@@ -101,7 +102,7 @@ void DawEngine::releaseResources()
 void DawEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) noexcept
 {
     const auto numSamples = buffer.getNumSamples();
-    
+
     // Update transport position
     if (transport->isPlaying())
     {
@@ -109,11 +110,65 @@ void DawEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
         if (device != nullptr)
         {
             transport->updatePosition(numSamples, device->getCurrentSampleRate());
+
+            // Handle looping
+            if (loopEnabled.load())
+            {
+                const auto currentPos = transport->getPositionInBeats();
+                const auto loopStart = loopStartBeats.load();
+                const auto loopEnd = loopEndBeats.load();
+
+                if (currentPos >= loopEnd)
+                {
+                    transport->setPositionInBeats(loopStart);
+                }
+            }
         }
     }
-    
+
+    // Generate metronome clicks
+    if (metronomeEnabled.load() && transport->isPlaying())
+    {
+        generateMetronomeClicks(buffer);
+    }
+
     // Process audio graph
     audioGraph->processBlock(buffer, midiMessages);
+}
+
+void DawEngine::generateMetronomeClicks(juce::AudioBuffer<float>& buffer) noexcept
+{
+    const auto currentBeat = transport->getPositionInBeats();
+    const auto currentBeatFloor = std::floor(currentBeat);
+
+    // Check if we've crossed a beat boundary
+    if (currentBeatFloor != lastBeatPosition)
+    {
+        lastBeatPosition = currentBeatFloor;
+        clickSampleCounter = 0; // Start new click
+    }
+
+    // Generate click sound if we're still within the click duration
+    if (clickSampleCounter < clickDurationSamples)
+    {
+        const auto volume = metronomeVolume.load();
+        const auto numSamples = buffer.getNumSamples();
+        const auto numChannels = buffer.getNumChannels();
+
+        for (int sample = 0; sample < numSamples && clickSampleCounter < clickDurationSamples; ++sample, ++clickSampleCounter)
+        {
+            // Generate simple tone click (1kHz sine wave with exponential decay)
+            const auto phase = static_cast<float>(clickSampleCounter) * 0.14f; // ~1kHz at 44.1kHz
+            const auto decay = std::exp(-static_cast<float>(clickSampleCounter) * 0.01f);
+            const auto clickSample = std::sin(phase) * decay * volume * 0.1f; // Keep volume reasonable
+
+            // Add click to all output channels
+            for (int channel = 0; channel < numChannels; ++channel)
+            {
+                buffer.addSample(channel, sample, clickSample);
+            }
+        }
+    }
 }
 
 void DawEngine::play()
@@ -139,6 +194,56 @@ void DawEngine::setTempo(double bpm)
 void DawEngine::setTimeSignature(int numerator, int denominator)
 {
     transport->setTimeSignature(numerator, denominator);
+}
+
+void DawEngine::setMetronomeEnabled(bool enabled)
+{
+    metronomeEnabled.store(enabled);
+}
+
+void DawEngine::setMetronomeVolume(float volume)
+{
+    metronomeVolume.store(juce::jlimit(0.0f, 1.0f, volume));
+}
+
+bool DawEngine::isMetronomeEnabled() const
+{
+    return metronomeEnabled.load();
+}
+
+float DawEngine::getMetronomeVolume() const
+{
+    return metronomeVolume.load();
+}
+
+void DawEngine::setLoopEnabled(bool enabled)
+{
+    loopEnabled.store(enabled);
+}
+
+void DawEngine::setLoopRegion(double startBeats, double endBeats)
+{
+    // Ensure valid loop region
+    if (endBeats > startBeats)
+    {
+        loopStartBeats.store(startBeats);
+        loopEndBeats.store(endBeats);
+    }
+}
+
+bool DawEngine::isLoopEnabled() const
+{
+    return loopEnabled.load();
+}
+
+double DawEngine::getLoopStart() const
+{
+    return loopStartBeats.load();
+}
+
+double DawEngine::getLoopEnd() const
+{
+    return loopEndBeats.load();
 }
 
 bool DawEngine::isPlaying() const
@@ -231,17 +336,20 @@ DawEngine::MeterData DawEngine::getTrackMeter(int trackIndex) const
 
 DawEngine::MeterData DawEngine::getMasterMeter() const
 {
-    // For now, return combined meter from all tracks
-    // In a full implementation, this would be a separate master meter
-    MeterData master = { 0.0f, 0.0f };
-    const auto numTracks = audioGraph->getNumTracks();
-    for (int i = 0; i < numTracks; ++i)
-    {
-        const auto trackMeter = getTrackMeter(i);
-        master.peak = std::max(master.peak, trackMeter.peak);
-        master.rms = std::max(master.rms, trackMeter.rms);
-    }
-    return master;
+    // Production implementation: Use dedicated master meter from AudioGraph
+    // The master meter tracks the summed output of all tracks after master gain
+    const auto graphMeter = audioGraph->getMasterMeter();
+    return { graphMeter.peak, graphMeter.rms };
+}
+
+void DawEngine::setMasterGain(float gainDb) noexcept
+{
+    audioGraph->setMasterGain(gainDb);
+}
+
+float DawEngine::getMasterGain() const noexcept
+{
+    return audioGraph->getMasterGain();
 }
 
 float DawEngine::getCpuLoad() const
@@ -287,24 +395,23 @@ void DawEngine::updateCpuLoad(std::chrono::high_resolution_clock::duration proce
         numSamples,
         sampleRate
     );
-    
+
     // Legacy CPU load calculation (kept for compatibility)
     ++processBlockCount;
     accumulatedProcessTime += processTime;
-    
+
     // Update every 10 blocks
     if (processBlockCount >= 10)
     {
         const auto totalTime = std::chrono::duration_cast<std::chrono::microseconds>(accumulatedProcessTime).count();
         const auto bufferTime = (numSamples / sampleRate) * 1e6 * processBlockCount;
         const auto load = bufferTime > 0.0 ? (static_cast<float>(totalTime) / static_cast<float>(bufferTime)) * 100.0f : 0.0f;
-        
+
         cpuLoad.store(juce::jlimit(0.0f, 100.0f, load), std::memory_order_release);
-        
+
         processBlockCount = 0;
         accumulatedProcessTime = std::chrono::high_resolution_clock::duration::zero();
     }
 }
 
 } // namespace daw::audio::engine
-

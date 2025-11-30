@@ -67,10 +67,10 @@ struct TypographyTokens
     float titleSize{ 16.0f };
     float headingSize{ 20.0f };
 
-    juce::Font small()   const { return juce::Font(juce::FontOptions(smallSize,   juce::Font::plain)); }
-    juce::Font body()    const { return juce::Font(juce::FontOptions(bodySize,    juce::Font::plain)); }
-    juce::Font title()   const { return juce::Font(juce::FontOptions(titleSize,   juce::Font::bold)); }
-    juce::Font heading() const { return juce::Font(juce::FontOptions(headingSize, juce::Font::bold)); }
+    juce::Font small()   const { return juce::Font(smallSize,   juce::Font::plain); }
+    juce::Font body()    const { return juce::Font(bodySize,    juce::Font::plain); }
+    juce::Font title()   const { return juce::Font(titleSize,   juce::Font::bold); }
+    juce::Font heading() const { return juce::Font(headingSize, juce::Font::bold); }
 };
 
 struct DesignTokens

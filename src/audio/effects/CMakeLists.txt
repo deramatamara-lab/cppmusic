@@ -23,6 +23,7 @@ target_include_directories(audio_effects PUBLIC
 
 target_link_libraries(audio_effects PUBLIC
     audio_processors
+    juce::juce_core
 )
 
 # Link JUCE if available

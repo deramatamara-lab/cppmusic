@@ -23,6 +23,9 @@ public:
     /** Returns a macro slider for parameter attachments */
     juce::Slider& getMacroSlider(std::size_t index);
 
+    /** Set macro label text */
+    void setMacroLabel(std::size_t index, const juce::String& label);
+
 private:
     void timerCallback() override;
 

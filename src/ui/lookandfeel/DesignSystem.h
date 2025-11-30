@@ -1,5 +1,11 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_graphics/juce_graphics.h>
+#if JUCE_MODULE_AVAILABLE_juce_animation
+#include <juce_animation/juce_animation.h>
+#endif
+#include <atomic>
+#include <array>
 
 namespace daw::ui::lookandfeel
 {
@@ -10,113 +16,142 @@ namespace daw::ui::lookandfeel
  */
 namespace DesignSystem
 {
+    namespace detail
+    {
+        class ColourTokenRef
+        {
+        public:
+            using Getter = juce::Colour (*)();
+            constexpr ColourTokenRef(Getter getter = nullptr) : getterFn(getter) {}
+
+            operator juce::Colour() const { return getterFn ? getterFn() : juce::Colours::transparentBlack; }
+            operator juce::uint32() const { return getterFn ? getterFn().getARGB() : juce::Colours::transparentBlack.getARGB(); }
+
+        private:
+            Getter getterFn;
+        };
+
+        template<typename T>
+        class ScalarTokenRef
+        {
+        public:
+            using Getter = T (*)();
+            constexpr ScalarTokenRef(Getter getter = nullptr) : getterFn(getter) {}
+
+            operator T() const { return getterFn ? getterFn() : T{}; }
+
+        private:
+            Getter getterFn;
+        };
+    } // namespace detail
+
     namespace Colors
     {
         // Base colors - 2025 refined palette
-        constexpr unsigned int background           = 0xff0f0f0f;
-        constexpr unsigned int surface              = 0xff1e1e1e;
-        constexpr unsigned int surfaceElevated      = 0xff2a2a2a;
-        constexpr unsigned int surface0             = 0xff0f0f0f;
-        constexpr unsigned int surface1             = 0xff1a1a1a;
-        constexpr unsigned int surface2             = 0xff1e1e1e;
-        constexpr unsigned int surface3             = 0xff252525;
-        constexpr unsigned int surface4             = 0xff2a2a2a;
+        extern const detail::ColourTokenRef background;
+        extern const detail::ColourTokenRef surface;
+        extern const detail::ColourTokenRef surfaceElevated;
+        extern const detail::ColourTokenRef surface0;
+        extern const detail::ColourTokenRef surface1;
+        extern const detail::ColourTokenRef surface2;
+        extern const detail::ColourTokenRef surface3;
+        extern const detail::ColourTokenRef surface4;
 
         // Primary colors - Modern cyan
-        constexpr unsigned int primary              = 0xff00d4ff;
-        constexpr unsigned int primaryHover         = 0xff33e0ff;
-        constexpr unsigned int primaryPressed       = 0xff00b8d9;
-        constexpr unsigned int primaryLight         = 0xff66ebff;
-        constexpr unsigned int primaryDark          = 0xff0099cc;
+        extern const detail::ColourTokenRef primary;
+        extern const detail::ColourTokenRef primaryHover;
+        extern const detail::ColourTokenRef primaryPressed;
+        extern const detail::ColourTokenRef primaryLight;
+        extern const detail::ColourTokenRef primaryDark;
 
         // Secondary colors
-        constexpr unsigned int secondary            = 0xff666666;
-        constexpr unsigned int secondaryHover       = 0xff777777;
-        constexpr unsigned int secondaryPressed     = 0xff555555;
+        extern const detail::ColourTokenRef secondary;
+        extern const detail::ColourTokenRef secondaryHover;
+        extern const detail::ColourTokenRef secondaryPressed;
 
         // Text colors
-        constexpr unsigned int text                 = 0xffffffff;
-        constexpr unsigned int textSoft             = 0xfff2f2f2;
-        constexpr unsigned int textSecondary        = 0xffb3b3b3;
-        constexpr unsigned int textTertiary         = 0xff888888;
-        constexpr unsigned int textDisabled         = 0xff555555;
+        extern const detail::ColourTokenRef text;
+        extern const detail::ColourTokenRef textSoft;
+        extern const detail::ColourTokenRef textSecondary;
+        extern const detail::ColourTokenRef textTertiary;
+        extern const detail::ColourTokenRef textDisabled;
 
         // Semantic colors
-        constexpr unsigned int accent               = 0xff00ffb3;
-        constexpr unsigned int accentHover          = 0xff33ffc2;
-        constexpr unsigned int accentPressed        = 0xff00cc8f;
-        constexpr unsigned int danger               = 0xffff5555;
-        constexpr unsigned int dangerHover          = 0xffff7777;
-        constexpr unsigned int dangerPressed        = 0xffcc3333;
-        constexpr unsigned int success              = 0xff55ff55;
-        constexpr unsigned int warning              = 0xffffbb33;
-        constexpr unsigned int error                = 0xffff5555;
+        extern const detail::ColourTokenRef accent;
+        extern const detail::ColourTokenRef accentHover;
+        extern const detail::ColourTokenRef accentPressed;
+        extern const detail::ColourTokenRef danger;
+        extern const detail::ColourTokenRef dangerHover;
+        extern const detail::ColourTokenRef dangerPressed;
+        extern const detail::ColourTokenRef success;
+        extern const detail::ColourTokenRef warning;
+        extern const detail::ColourTokenRef error;
 
         // UI state colors
-        constexpr unsigned int hover                = 0xff2a2a2a;
-        constexpr unsigned int hoverLight           = 0xff333333;
-        constexpr unsigned int selected             = 0xff005577;
-        constexpr unsigned int selectedHover        = 0xff006688;
-        constexpr unsigned int active               = 0xff0077aa;
-        constexpr unsigned int outline              = 0xff3a3a3a;
-        constexpr unsigned int outlineFocus         = 0xff00d4ff;
-        constexpr unsigned int divider              = 0xff2a2a2a;
+        extern const detail::ColourTokenRef hover;
+        extern const detail::ColourTokenRef hoverLight;
+        extern const detail::ColourTokenRef selected;
+        extern const detail::ColourTokenRef selectedHover;
+        extern const detail::ColourTokenRef active;
+        extern const detail::ColourTokenRef outline;
+        extern const detail::ColourTokenRef outlineFocus;
+        extern const detail::ColourTokenRef divider;
 
         // Glassmorphism colors
-        constexpr unsigned int glassBackground      = 0xcc1e1e1e;
-        constexpr unsigned int glassBackgroundLight = 0x992a2a2a;
-        constexpr unsigned int glassBorder          = 0x4dffffff;
-        constexpr unsigned int glassShadow          = 0x80000000;
-        constexpr unsigned int glassHighlight       = 0x33ffffff;
+        extern const detail::ColourTokenRef glassBackground;
+        extern const detail::ColourTokenRef glassBackgroundLight;
+        extern const detail::ColourTokenRef glassBorder;
+        extern const detail::ColourTokenRef glassShadow;
+        extern const detail::ColourTokenRef glassHighlight;
 
         // Meter colors
-        constexpr unsigned int meterBackground      = 0xff0f0f0f;
-        constexpr unsigned int meterNormal          = 0xff00ff88;
-        constexpr unsigned int meterNormalStart     = 0xff00ff88;
-        constexpr unsigned int meterNormalEnd       = 0xff00cc66;
-        constexpr unsigned int meterWarning         = 0xffffcc00;
-        constexpr unsigned int meterWarningStart    = 0xffffcc00;
-        constexpr unsigned int meterWarningEnd      = 0xffff9900;
-        constexpr unsigned int meterDanger          = 0xffff4444;
-        constexpr unsigned int meterDangerStart     = 0xffff4444;
-        constexpr unsigned int meterDangerEnd       = 0xffff0000;
+        extern const detail::ColourTokenRef meterBackground;
+        extern const detail::ColourTokenRef meterNormal;
+        extern const detail::ColourTokenRef meterNormalStart;
+        extern const detail::ColourTokenRef meterNormalEnd;
+        extern const detail::ColourTokenRef meterWarning;
+        extern const detail::ColourTokenRef meterWarningStart;
+        extern const detail::ColourTokenRef meterWarningEnd;
+        extern const detail::ColourTokenRef meterDanger;
+        extern const detail::ColourTokenRef meterDangerStart;
+        extern const detail::ColourTokenRef meterDangerEnd;
 
         // Gradients
-        constexpr unsigned int gradientPrimaryStart = 0xff00d4ff;
-        constexpr unsigned int gradientPrimaryEnd   = 0xff0099cc;
-        constexpr unsigned int gradientAccentStart  = 0xff00ffb3;
-        constexpr unsigned int gradientAccentEnd    = 0xff00cc88;
+        extern const detail::ColourTokenRef gradientPrimaryStart;
+        extern const detail::ColourTokenRef gradientPrimaryEnd;
+        extern const detail::ColourTokenRef gradientAccentStart;
+        extern const detail::ColourTokenRef gradientAccentEnd;
     }
 
     namespace Typography
     {
-        constexpr float heading1   = 24.0f;
-        constexpr float heading2   = 20.0f;
-        constexpr float heading3   = 18.0f;
-        constexpr float body       = 14.0f;
-        constexpr float bodySmall  = 12.0f;
-        constexpr float caption    = 11.0f;
-        constexpr float mono       = 13.0f;
+        extern const detail::ScalarTokenRef<float> heading1;
+        extern const detail::ScalarTokenRef<float> heading2;
+        extern const detail::ScalarTokenRef<float> heading3;
+        extern const detail::ScalarTokenRef<float> body;
+        extern const detail::ScalarTokenRef<float> bodySmall;
+        extern const detail::ScalarTokenRef<float> caption;
+        extern const detail::ScalarTokenRef<float> mono;
     }
 
     namespace Spacing
     {
-        constexpr int unit    = 8;
-        constexpr int xsmall  = unit / 2;  // 4
-        constexpr int small   = unit;      // 8
-        constexpr int medium  = unit * 2;  // 16
-        constexpr int large   = unit * 3;  // 24
-        constexpr int xlarge  = unit * 4;  // 32
-        constexpr int xxlarge = unit * 6;  // 48
+        extern const detail::ScalarTokenRef<int> unit;
+        extern const detail::ScalarTokenRef<int> xsmall;
+        extern const detail::ScalarTokenRef<int> small;
+        extern const detail::ScalarTokenRef<int> medium;
+        extern const detail::ScalarTokenRef<int> large;
+        extern const detail::ScalarTokenRef<int> xlarge;
+        extern const detail::ScalarTokenRef<int> xxlarge;
     }
 
     namespace Radii
     {
-        constexpr float none   = 0.0f;
-        constexpr float small  = 2.0f;
-        constexpr float medium = 4.0f;
-        constexpr float large  = 8.0f;
-        constexpr float xlarge = 12.0f;
+        extern const detail::ScalarTokenRef<float> none;
+        extern const detail::ScalarTokenRef<float> small;
+        extern const detail::ScalarTokenRef<float> medium;
+        extern const detail::ScalarTokenRef<float> large;
+        extern const detail::ScalarTokenRef<float> xlarge;
     }
 
     namespace Shadows
@@ -144,11 +179,58 @@ namespace DesignSystem
     namespace Animation
     {
         // Timing (ms)
-        constexpr int fast   = 150;
-        constexpr int normal = 250;
-        constexpr int slow   = 400;
+        extern const detail::ScalarTokenRef<int> fast;
+        extern const detail::ScalarTokenRef<int> normal;
+        extern const detail::ScalarTokenRef<int> slow;
 
         enum class EasingType { Linear, EaseIn, EaseOut, EaseInOut };
+    }
+
+    // DAW-specific layout constants for professional appearance
+    namespace Layout
+    {
+        // Transport bar
+        extern const detail::ScalarTokenRef<int> kTransportHeight;
+        extern const detail::ScalarTokenRef<int> kStatusStripHeight;
+
+        // Track dimensions
+        extern const detail::ScalarTokenRef<int> kTrackHeight;
+        extern const detail::ScalarTokenRef<int> kTrackHeaderWidth;
+        extern const detail::ScalarTokenRef<int> kTrackMinimumHeight;
+        extern const detail::ScalarTokenRef<int> kTrackMaximumHeight;
+
+        // Mixer dimensions
+        extern const detail::ScalarTokenRef<int> kMixerStripWidth;
+        extern const detail::ScalarTokenRef<int> kMixerStripMinWidth;
+        extern const detail::ScalarTokenRef<int> kMixerStripMaxWidth;
+        extern const detail::ScalarTokenRef<int> kMixerFaderHeight;
+        extern const detail::ScalarTokenRef<int> kMixerMeterWidth;
+
+        // Panel dimensions
+        extern const detail::ScalarTokenRef<int> kPanelMinWidth;
+        extern const detail::ScalarTokenRef<int> kPanelMaxWidth;
+        extern const detail::ScalarTokenRef<int> kPanelMinHeight;
+        extern const detail::ScalarTokenRef<int> kPanelMaxHeight;
+
+        // Grid and timeline
+        extern const detail::ScalarTokenRef<int> kTimelineRulerHeight;
+        extern const detail::ScalarTokenRef<int> kGridMinorLineWidth;
+        extern const detail::ScalarTokenRef<int> kGridMajorLineWidth;
+        extern const detail::ScalarTokenRef<float> kPixelsPerBeat;
+
+        // Controls
+        extern const detail::ScalarTokenRef<int> kKnobSize;
+        extern const detail::ScalarTokenRef<int> kButtonHeight;
+        extern const detail::ScalarTokenRef<int> kSliderHeight;
+    }
+
+    // DAW-specific color schemes for track colors, clip colors, etc.
+    namespace TrackColors
+    {
+        // Professional track color palette (hue-based but consistent brightness/saturation)
+        [[nodiscard]] juce::Colour getTrackColor(int trackIndex) noexcept;
+        [[nodiscard]] juce::Colour getClipColor(int trackIndex, float velocity = 1.0f) noexcept;
+        [[nodiscard]] juce::Colour getMeterColor(float level) noexcept; // level 0.0-1.0
     }
 
     namespace Gradients
@@ -156,30 +238,37 @@ namespace DesignSystem
         struct GradientStop { float position; unsigned int color; };
 
         // Primary button
-        constexpr GradientStop primaryButtonStops[] {
-            { 0.00f, Colors::gradientPrimaryStart },
-            { 1.00f, Colors::gradientPrimaryEnd   }
-        };
+        [[nodiscard]] std::array<GradientStop, 2> primaryButtonStops() noexcept;
 
         // Accent button
-        constexpr GradientStop accentButtonStops[] {
-            { 0.00f, Colors::gradientAccentStart },
-            { 1.00f, Colors::gradientAccentEnd   }
-        };
+        [[nodiscard]] std::array<GradientStop, 2> accentButtonStops() noexcept;
 
         // Meter variants
-        constexpr GradientStop meterNormalStops[]  {
-            { 0.00f, Colors::meterNormalStart },
-            { 1.00f, Colors::meterNormalEnd   }
-        };
-        constexpr GradientStop meterWarningStops[] {
-            { 0.00f, Colors::meterWarningStart },
-            { 1.00f, Colors::meterWarningEnd   }
-        };
-        constexpr GradientStop meterDangerStops[]  {
-            { 0.00f, Colors::meterDangerStart },
-            { 1.00f, Colors::meterDangerEnd   }
-        };
+        [[nodiscard]] std::array<GradientStop, 2> meterNormalStops() noexcept;
+        [[nodiscard]] std::array<GradientStop, 2> meterWarningStops() noexcept;
+        [[nodiscard]] std::array<GradientStop, 2> meterDangerStops() noexcept;
+    }
+
+    // ---------- Higher-level semantic helpers -------------------------------
+
+    namespace Tracks
+    {
+        // Deterministic track colour palette derived from accent token.
+        [[nodiscard]] juce::Colour colourForIndex (int trackIndex) noexcept;
+        [[nodiscard]] juce::Colour mutedColourForIndex (int trackIndex) noexcept;
+    }
+
+    namespace Meters
+    {
+        // Map linear gain [0, 1] → dB in a sane range for UI meters.
+        [[nodiscard]] float linearToDecibels (float linear) noexcept;
+
+        // Normalise dB value into [0, 1] for vertical meters, using a fixed
+        // visible range of [-60 dB, 0 dB].
+        [[nodiscard]] float normalisedFromDb (float db) noexcept;
+
+        // Y position of 0 dB line for a vertical meter (0 = top).
+        [[nodiscard]] float zeroDbLineY (const juce::Rectangle<float>& bounds) noexcept;
     }
 
     // ---------- Utilities (implemented in DesignSystem.cpp) -------------------
@@ -216,6 +305,9 @@ namespace DesignSystem
     void drawGlassPanel(juce::Graphics& g, const juce::Rectangle<float>& bounds,
                         float cornerRadius, bool elevated) noexcept;
 
+    // Semantic button styles used by drawButton/drawToggleButton helpers.
+    enum class ButtonStyle { Default, Primary, Danger, Ghost, Transport };
+
     // Fonts
     juce::Font getHeadingFont(float size) noexcept;
     juce::Font getBodyFont(float size) noexcept;
@@ -238,5 +330,7 @@ namespace DesignSystem
     // Focus outline
     void drawFocusRing(juce::Graphics& g, const juce::Rectangle<float>& bounds,
                        float radius, juce::Colour colour) noexcept;
+
+
 }
 } // namespace daw::ui::lookandfeel

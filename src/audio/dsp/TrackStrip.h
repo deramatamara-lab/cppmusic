@@ -1,6 +1,6 @@
 #pragma once
 
-#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 #include <atomic>
 #include <cstdint>
 
@@ -9,7 +9,7 @@ namespace daw::audio::dsp
 
 /**
  * @brief Per-track audio processor
- * 
+ *
  * Applies gain, pan, mute, and solo to a track.
  * Provides lock-free metering (peak/RMS).
  * Follows DAW_DEV_RULES: real-time safe, no allocations/locks in processBlock.
@@ -55,15 +55,15 @@ private:
     std::atomic<float> pan;
     std::atomic<bool> muted;
     std::atomic<bool> soloed;
-    
+
     // Metering (lock-free, updated in audio thread, read from UI thread)
     std::atomic<float> peakLevel;
     std::atomic<float> rmsLevel;
-    
+
     // Internal state
     double currentSampleRate;
     int currentBlockSize;
-    
+
     // Helper functions
     [[nodiscard]] static float dbToLinear(float db) noexcept;
     void updateMeters(const juce::AudioBuffer<float>& buffer) noexcept;

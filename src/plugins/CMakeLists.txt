@@ -28,5 +28,10 @@ if(TARGET juce::juce_core)
         juce::juce_audio_processors
         juce::juce_core
     )
-endif()
 
+    # Disable web browser component to avoid GTK/WebKit dependencies in tests
+    target_compile_definitions(plugins PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+    )
+endif()

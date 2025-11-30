@@ -9,7 +9,7 @@ namespace daw::project
 
 /**
  * @brief Track model
- * 
+ *
  * Represents a track in the project with properties like name, color, visibility,
  * and audio parameters (gain, pan, mute, solo).
  */
@@ -48,7 +48,12 @@ public:
     [[nodiscard]] bool isSoloed() const { return soloed; }
     void setSoloed(bool isSoloed) { soloed = isSoloed; }
 
+    [[nodiscard]] bool isRecordArmed() const { return recordArmed; }
+    void setRecordArmed(bool isArmed) { recordArmed = isArmed; }
+
     [[nodiscard]] uint32_t getId() const { return id; }
+    [[nodiscard]] int getIndex() const { return index; }
+    void setIndex(int newIndex) { index = newIndex; }
 
 private:
     uint32_t id;
@@ -59,7 +64,9 @@ private:
     float pan = 0.0f;
     bool muted = false;
     bool soloed = false;
-    
+    bool recordArmed = false;
+    int index = -1;
+
     static uint32_t nextId;
     static uint32_t generateId();
 };

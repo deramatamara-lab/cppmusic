@@ -72,46 +72,54 @@ void MainLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& butt
     const auto radius = t.radii.medium;
 
     const auto isToggle = button.getToggleState();
+    const auto isActive = isToggle || shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown;
+
+    // Base color with state variations
     auto base = t.colours.accentPrimary;
     if (shouldDrawButtonAsDown)
-        base = base.darker(0.1f);
+        base = t.colours.accentPrimaryActive;
     else if (shouldDrawButtonAsHighlighted)
-        base = base.brighter(0.15f);
+        base = t.colours.accentPrimaryHover;
 
-    if (!isToggle)
-    {
-        juce::ColourGradient grad(t.colours.accentPrimary.brighter(0.2f),
-                                   bounds.getTopLeft(),
-                                   t.colours.accentPrimary.darker(0.4f),
-                                   bounds.getBottomRight(),
-                                   false);
-        g.setGradientFill(grad);
-    }
-    else
-    {
-        g.setColour(base);
-    }
-
+    // Gradient fill for all buttons
+    juce::ColourGradient grad(base.brighter(0.2f),
+                               bounds.getTopLeft(),
+                               base.darker(0.4f),
+                               bounds.getBottomRight(),
+                               false);
+    g.setGradientFill(grad);
     g.fillRoundedRectangle(bounds, radius);
 
-    g.setColour(base.withAlpha(isToggle ? 0.9f : 0.6f));
-    g.drawRoundedRectangle(bounds, radius, 1.4f);
+    // Neon glow outline - stronger when active/hovered
+    const auto glowAlpha = isActive ? 0.9f : 0.6f;
+    g.setColour(t.colours.accentSecondary.withAlpha(glowAlpha));
+    g.drawRoundedRectangle(bounds, radius, isActive ? 1.8f : 1.4f);
 
-    if (shouldDrawButtonAsHighlighted || isToggle)
+    // Inner highlight ring for active/hovered states
+    if (isActive)
     {
         auto highlight = bounds.reduced(2.0f);
-        g.setColour(t.colours.accentSecondary.withAlpha(0.25f));
-        g.drawRoundedRectangle(highlight, radius - 1.0f, 1.2f);
+        // Neon cyan glow
+        g.setColour(t.colours.accentSecondary.withAlpha(0.4f));
+        g.drawRoundedRectangle(highlight, radius - 1.0f, 1.5f);
+
+        // Additional inner glow
+        auto innerGlow = bounds.reduced(3.0f);
+        g.setColour(t.colours.accentSecondary.withAlpha(0.15f));
+        g.drawRoundedRectangle(innerGlow, radius - 2.0f, 1.0f);
     }
 
+    // Outer glow effect - enhanced for active buttons
+    const auto glowIntensity = isActive ? 1.5f : 1.0f;
     drawOuterGlow(g, bounds, t.elevation.controlShadowRadius,
-                  t.elevation.controlShadowAlpha * (isToggle ? 1.2f : 1.0f));
+                  t.elevation.controlShadowAlpha * glowIntensity);
 }
 
 void MainLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
                                        float sliderPos, float rotaryStartAngle, float rotaryEndAngle,
-                                       juce::Slider& /*slider*/)
+                                       juce::Slider& slider)
 {
+    juce::ignoreUnused(slider);
     jassert(tokens != nullptr);
     const auto& t = *tokens;
     auto bounds = juce::Rectangle<int>(x, y, width, height).toFloat().reduced(6.0f);
@@ -119,32 +127,68 @@ void MainLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int widt
     const auto centre = bounds.getCentre();
     const auto knobRadius = radius * 0.75f;
 
+    // Background glow halo
     g.setColour(t.colours.accentPrimary.withAlpha(0.08f));
     g.fillEllipse(bounds);
 
+    // Outer halo arc (modulation ring) - shows full range
+    const auto haloRadius = radius - 2.0f;
+    juce::Path haloArc;
+    haloArc.addCentredArc(centre.x, centre.y, haloRadius, haloRadius, 0.0f,
+                         rotaryStartAngle, rotaryEndAngle, true);
+    g.setColour(t.colours.accentPrimary.withAlpha(0.15f));
+    g.strokePath(haloArc, juce::PathStrokeType(3.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // Tick marks on halo
+    constexpr int numTicks = 12;
+    g.setColour(t.colours.accentPrimary.withAlpha(0.3f));
+    for (int i = 0; i <= numTicks; ++i)
+    {
+        const auto tickAngle = rotaryStartAngle + (rotaryEndAngle - rotaryStartAngle) * (static_cast<float>(i) / static_cast<float>(numTicks));
+        const auto tickStart = centre.getPointOnCircumference(haloRadius - 2.0f, tickAngle);
+        const auto tickEnd = centre.getPointOnCircumference(haloRadius + 2.0f, tickAngle);
+        g.drawLine(tickStart.x, tickStart.y, tickEnd.x, tickEnd.y, 1.0f);
+    }
+
+    // Knob body with gradient
     auto knobArea = juce::Rectangle<float>(knobRadius * 2.0f, knobRadius * 2.0f).withCentre(centre);
     juce::ColourGradient knobGrad(t.colours.panelHighlight.brighter(0.25f), knobArea.getTopLeft(),
                                   t.colours.panelBackground.darker(0.3f), knobArea.getBottomRight(), false);
     g.setGradientFill(knobGrad);
     g.fillEllipse(knobArea);
 
+    // Knob border
     g.setColour(t.colours.panelBorder.withAlpha(0.8f));
     g.drawEllipse(knobArea, 1.1f);
 
+    // Value arc with neon gradient
     const auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
     const auto arcRadius = knobRadius + 6.0f;
     juce::Path valueArc;
     valueArc.addCentredArc(centre.x, centre.y, arcRadius, arcRadius, 0.0f, rotaryStartAngle, angle, true);
-    g.setColour(t.colours.accentPrimary);
-    g.strokePath(valueArc, juce::PathStrokeType(2.4f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 
+    // Neon gradient for value arc
+    juce::ColourGradient valueGrad(t.colours.accentPrimary,
+                                   centre.getPointOnCircumference(arcRadius, rotaryStartAngle),
+                                   t.colours.accentSecondary,
+                                   centre.getPointOnCircumference(arcRadius, angle),
+                                   false);
+    g.setGradientFill(valueGrad);
+    g.strokePath(valueArc, juce::PathStrokeType(2.8f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+    // Pointer needle with neon accent
     const auto pointerRadius = knobRadius * 0.7f;
     juce::Point<float> pointer(
         centre.x + std::cos(angle) * pointerRadius,
         centre.y + std::sin(angle) * pointerRadius);
+
+    // Pointer with glow effect
+    g.setColour(t.colours.accentSecondary.withAlpha(0.5f));
+    g.drawLine(centre.x, centre.y, pointer.x, pointer.y, 3.0f);
     g.setColour(t.colours.accentSecondary);
     g.drawLine(centre.x, centre.y, pointer.x, pointer.y, 2.0f);
 
+    // Outer glow for knob
     drawOuterGlow(g, knobArea, t.elevation.controlShadowRadius, t.elevation.controlShadowAlpha);
 }
 

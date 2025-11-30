@@ -24,6 +24,7 @@ public:
 
     void paint(juce::Graphics& g) override;
     void resized() override;
+    void mouseDown(const juce::MouseEvent& event) override;
     void timerCallback() override;
 
 private:
@@ -36,6 +37,7 @@ private:
     juce::Slider panSlider;
     juce::TextButton muteButton;
     juce::TextButton soloButton;
+    bool clipLatched { false };
     
     float peakLevel;
     float rmsLevel;
@@ -47,10 +49,9 @@ private:
     void muteButtonClicked();
     void soloButtonClicked();
     
-    void drawMeter(juce::Graphics& g, juce::Rectangle<int> bounds, float level);
+    void drawMeter(juce::Graphics& g, const juce::Rectangle<int>& bounds, float peak, float rms);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MixerStrip)
 };
 
 } // namespace daw::ui::views
-

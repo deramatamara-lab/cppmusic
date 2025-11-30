@@ -7,6 +7,7 @@ add_executable(audio_tests
     engine/TransportTest.cpp
     engine/DawEngineTest.cpp
     dsp/TrackStripTest.cpp
+    DrumMachineTest.cpp
     main.cpp
 )
 
@@ -15,6 +16,7 @@ target_link_libraries(audio_tests PRIVATE
     audio_dsp
     audio_effects
     audio_processors
+    ui_components
 )
 
 if(TARGET juce::juce_core)

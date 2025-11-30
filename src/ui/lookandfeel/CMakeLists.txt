@@ -6,6 +6,8 @@ set(UI_LOOKANDFEEL_SOURCES
     DesignTokens.cpp
     MainLookAndFeel.cpp
     ThemeManager.cpp
+    EnhancedMainLookAndFeel.cpp
+    EnhancedThemeManager.cpp
 )
 
 set(UI_LOOKANDFEEL_HEADERS
@@ -14,6 +16,8 @@ set(UI_LOOKANDFEEL_HEADERS
     DesignTokens.h
     MainLookAndFeel.h
     ThemeManager.h
+    EnhancedMainLookAndFeel.h
+    EnhancedThemeManager.h
 )
 
 add_library(ui_lookandfeel STATIC
@@ -25,9 +29,13 @@ target_include_directories(ui_lookandfeel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_link_libraries(ui_lookandfeel PUBLIC
+    ui_effects
+)
+
 # Link JUCE modules
 if(TARGET juce::juce_core)
-    target_link_libraries(ui_lookandfeel PUBLIC 
+    target_link_libraries(ui_lookandfeel PUBLIC
         juce::juce_gui_basics
         juce::juce_graphics
         juce::juce_core

@@ -1,4 +1,8 @@
-# Main application executable
+# Main application (optional)
+option(BUILD_MAIN_APP "Build main application" ON)
+
+if(BUILD_MAIN_APP)
+# Create executable
 
 set(MAIN_SOURCES
     main.cpp
@@ -50,6 +54,17 @@ if(TARGET juce::juce_core)
         juce::juce_audio_processors
         juce::juce_audio_utils
     )
+
+    # Disable web browser component to avoid GTK/WebKit dependency during builds
+    target_compile_definitions(DAWProject PRIVATE
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+    )
+
+    # Apply the same GCC ICE workaround for JUCE modules
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(DAWProject PRIVATE -O2)
+    endif()
 else()
     message(FATAL_ERROR "JUCE is required to build the application. Please set JUCE_DIR or add JUCE as a submodule.")
 endif()
@@ -69,3 +84,4 @@ if(WIN32)
     )
 endif()
 
+endif()

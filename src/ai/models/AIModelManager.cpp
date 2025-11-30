@@ -1,4 +1,5 @@
 #include "AIModelManager.h"
+#include <juce_events/juce_events.h>
 #include <thread>
 
 namespace daw::ai::models
@@ -8,7 +9,7 @@ AIModelManager::AIModelManager()
 {
 }
 
-void AIModelManager::loadModelAsync(const std::string& modelFile, 
+void AIModelManager::loadModelAsync(const std::string& modelFile,
                                    std::function<void(bool)> callback)
 {
     // Load on background thread
@@ -25,9 +26,14 @@ void AIModelManager::loadModelAsync(const std::string& modelFile,
                     std::lock_guard<std::mutex> lock(modelLock);
                     currentModel = std::move(newModel);
                 }
-                // Callback on message thread (would use MessageManager::callAsync in JUCE)
+                // Production implementation: Callback on message thread using JUCE's MessageManager
                 if (callback)
-                    callback(true);
+                {
+                    juce::MessageManager::callAsync([callback]()
+                    {
+                        callback(true);
+                    });
+                }
             }
             else
             {

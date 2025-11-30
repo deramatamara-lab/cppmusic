@@ -1,42 +1,42 @@
 #include "SessionLauncherView.h"
+#include "../lookandfeel/DesignSystem.h"
 
 namespace daw::ui::components
 {
 
-using daw::ui::lookandfeel::getDesignTokens;
+using namespace daw::ui::lookandfeel::DesignSystem;
 
 SessionLauncherView::SessionLauncherView()
 {
-    tokens = &getDesignTokens();
     headerLabel.setText("Session Launcher", juce::dontSendNotification);
     headerLabel.setJustificationType(juce::Justification::centredLeft);
-    if (tokens != nullptr)
-    {
-        headerLabel.setFont(tokens->type.title());
-        headerLabel.setColour(juce::Label::textColourId, tokens->colours.textSecondary);
-    }
+    headerLabel.setFont(getHeadingFont(Typography::heading3));
+    headerLabel.setColour(juce::Label::textColourId, juce::Colour(Colors::textSecondary));
+
     addAndMakeVisible(headerLabel);
     addAndMakeVisible(clipLauncher);
 }
 
 void SessionLauncherView::paint(juce::Graphics& g)
 {
-    if (tokens != nullptr)
-    {
-        g.fillAll(tokens->colours.backgroundAlt);
-        g.setColour(tokens->colours.panelBorder.withAlpha(0.5f));
-        g.drawRect(getLocalBounds().toFloat(), 1.0f);
-    }
-    else
-        g.fillAll(juce::Colours::black);
+    auto bounds = getLocalBounds().toFloat();
+    drawGlassPanel(g, bounds, Radii::medium, true);
+
+    auto headerBounds = headerLabel.getBounds().toFloat();
+    auto dividerY = headerBounds.getBottom() + static_cast<float>(Spacing::xsmall) * 0.5f;
+    g.setColour(juce::Colour(Colors::divider).withAlpha(0.9f));
+    g.fillRect(juce::Rectangle<float>(bounds.getX() + static_cast<float>(Spacing::small),
+                                      dividerY,
+                                      bounds.getWidth() - static_cast<float>(Spacing::small * 2),
+                                      hairline(this)));
 }
 
 void SessionLauncherView::resized()
 {
-    auto area = getLocalBounds().reduced(10);
-    auto header = area.removeFromTop(30);
+    auto area = getLocalBounds().reduced(Spacing::small);
+    auto header = area.removeFromTop(24);
     headerLabel.setBounds(header);
-    area.removeFromTop(4);
+    area.removeFromTop(Spacing::xsmall);
     clipLauncher.setBounds(area);
 }
 

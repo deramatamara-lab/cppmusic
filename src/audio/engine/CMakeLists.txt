@@ -7,6 +7,7 @@ set(AUDIO_ENGINE_SOURCES
     EngineContext.cpp
     ModulationMatrix.cpp
     PatternPlayer.cpp
+    PatternPlaybackEngine.cpp
 )
 
 set(AUDIO_ENGINE_HEADERS
@@ -18,6 +19,7 @@ set(AUDIO_ENGINE_HEADERS
     ModulationMatrix.h
     ParameterSmoother.h
     PatternPlayer.h
+    PatternPlaybackEngine.h
 )
 
 add_library(audio_engine STATIC
@@ -41,5 +43,10 @@ if(TARGET juce::juce_core)
         juce::juce_audio_utils
         juce::juce_core
     )
-endif()
 
+    # Disable web browser component to avoid GTK/WebKit dependencies in tests
+    target_compile_definitions(audio_engine PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+    )
+endif()

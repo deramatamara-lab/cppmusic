@@ -1,4 +1,5 @@
 #include "EngineContext.h"
+#include <juce_core/juce_core.h>
 
 namespace daw::audio::engine
 {
@@ -47,6 +48,51 @@ void EngineContext::setTempo(double bpm)
 void EngineContext::setTimeSignature(int numerator, int denominator)
 {
     engine->setTimeSignature(numerator, denominator);
+}
+
+void EngineContext::setMetronomeEnabled(bool enabled)
+{
+    engine->setMetronomeEnabled(enabled);
+}
+
+void EngineContext::setMetronomeVolume(float volume)
+{
+    engine->setMetronomeVolume(volume);
+}
+
+bool EngineContext::isMetronomeEnabled() const
+{
+    return engine->isMetronomeEnabled();
+}
+
+float EngineContext::getMetronomeVolume() const
+{
+    return engine->getMetronomeVolume();
+}
+
+void EngineContext::setLoopEnabled(bool enabled)
+{
+    engine->setLoopEnabled(enabled);
+}
+
+void EngineContext::setLoopRegion(double startBeats, double endBeats)
+{
+    engine->setLoopRegion(startBeats, endBeats);
+}
+
+bool EngineContext::isLoopEnabled() const
+{
+    return engine->isLoopEnabled();
+}
+
+double EngineContext::getLoopStart() const
+{
+    return engine->getLoopStart();
+}
+
+double EngineContext::getLoopEnd() const
+{
+    return engine->getLoopEnd();
 }
 
 bool EngineContext::isPlaying() const
@@ -119,10 +165,41 @@ EngineContext::MeterData EngineContext::getMasterMeter() const
     return engine->getMasterMeter();
 }
 
+void EngineContext::setMasterGain(float gainDb) noexcept
+{
+    engine->setMasterGain(gainDb);
+}
+
+float EngineContext::getMasterGain() const noexcept
+{
+    return engine->getMasterGain();
+}
+
 float EngineContext::getCpuLoad() const
 {
     return engine->getCpuLoad();
 }
 
-} // namespace daw::audio::engine
+uint64_t EngineContext::getXrunCount() const
+{
+    return engine->getXrunCount();
+}
 
+float EngineContext::getRamUsageMB() const
+{
+    // JUCE 7 no longer exposes per-process memory usage; return total RAM size.
+    return static_cast<float> (juce::SystemStats::getMemorySizeInMegabytes());
+}
+
+double EngineContext::getSampleRate() const
+{
+    auto* device = engine->getDeviceManager().getCurrentAudioDevice();
+    return device != nullptr ? device->getCurrentSampleRate() : 44100.0;
+}
+
+juce::AudioDeviceManager* EngineContext::getDeviceManager()
+{
+    return engine != nullptr ? &engine->getDeviceManager() : nullptr;
+}
+
+} // namespace daw::audio::engine

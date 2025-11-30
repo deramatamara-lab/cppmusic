@@ -58,6 +58,15 @@ juce::Slider& FlagshipDevicePanel::getMacroSlider(std::size_t index)
     return *macroSliders[index];
 }
 
+void FlagshipDevicePanel::setMacroLabel(std::size_t index, const juce::String& label)
+{
+    jassert(index < macroLabels.size());
+    if (auto* lbl = macroLabels[index].get())
+    {
+        lbl->setText(label, juce::dontSendNotification);
+    }
+}
+
 void FlagshipDevicePanel::paint(juce::Graphics& g)
 {
     const auto& tokens = daw::ui::lookandfeel::getDesignTokens();
@@ -99,13 +108,38 @@ void FlagshipDevicePanel::paint(juce::Graphics& g)
         g.fillRoundedRectangle(artArea, tokens.radii.medium);
     }
 
-    // Animated overlay lines to mimic motion
-    g.setColour(tokens.colours.accentSecondary.withAlpha(0.25f));
-    for (int i = 0; i < 5; ++i)
+    // Animated light sweeps with gradient effect
+    for (int i = 0; i < 8; ++i)
     {
-        const auto offset = std::fmod(animationPhase + static_cast<float>(i) * 0.15f, 1.0f);
+        const auto offset = std::fmod(animationPhase + static_cast<float>(i) * 0.125f, 1.0f);
         const auto y = artArea.getY() + offset * artArea.getHeight();
-        g.drawLine(artArea.getX(), y, artArea.getRight(), y, 1.2f);
+
+        // Gradient sweep effect
+        const auto sweepWidth = artArea.getWidth() * 0.3f;
+        const auto sweepCenter = artArea.getX() + artArea.getWidth() * 0.5f;
+        const auto sweepLeft = sweepCenter - sweepWidth * 0.5f;
+        const auto sweepRight = sweepCenter + sweepWidth * 0.5f;
+
+        // Fade in/out based on position
+        const auto fadePhase = std::fmod(offset + 0.5f, 1.0f);
+        const auto alpha = std::sin(fadePhase * juce::MathConstants<float>::pi) * 0.4f;
+
+        juce::ColourGradient sweepGrad(
+            tokens.colours.accentSecondary.withAlpha(alpha),
+            sweepCenter, y,
+            tokens.colours.accentPrimary.withAlpha(alpha * 0.5f),
+            sweepLeft, y,
+            false);
+        sweepGrad.addColour(0.5f, tokens.colours.accentSecondary.withAlpha(alpha));
+        sweepGrad.addColour(1.0f, tokens.colours.accentPrimary.withAlpha(alpha * 0.5f));
+
+        g.setGradientFill(sweepGrad);
+        g.drawLine(sweepLeft, y, sweepRight, y, 2.0f);
+
+        // Glow effect
+        g.setColour(tokens.colours.accentSecondary.withAlpha(alpha * 0.3f));
+        g.drawLine(sweepLeft, y - 1.0f, sweepRight, y - 1.0f, 1.0f);
+        g.drawLine(sweepLeft, y + 1.0f, sweepRight, y + 1.0f, 1.0f);
     }
 
     // Macro section background

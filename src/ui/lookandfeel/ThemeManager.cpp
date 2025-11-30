@@ -1,9 +1,23 @@
 #include "ThemeManager.h"
+#include "UltraDesignSystem.hpp"
 #include <juce_core/juce_core.h>
 #include <algorithm>
 
 namespace daw::ui::lookandfeel
 {
+
+namespace
+{
+    inline juce::Colour lighten(juce::Colour c, float amount) noexcept
+    {
+        return c.interpolatedWith(juce::Colours::white, juce::jlimit(0.0f, 1.0f, amount));
+    }
+
+    inline juce::Colour darken(juce::Colour c, float amount) noexcept
+    {
+        return c.interpolatedWith(juce::Colours::black, juce::jlimit(0.0f, 1.0f, amount));
+    }
+}
 
 ThemeManager::ThemeManager()
 {
@@ -22,16 +36,51 @@ void ThemeManager::setTheme(Theme theme)
 
 bool ThemeManager::loadCustomTheme(const std::string& filePath)
 {
-    juce::ignoreUnused(filePath);
-    // TODO: Implement custom theme loading from JSON
-    return false;
+    juce::File themeFile(filePath);
+    if (!themeFile.existsAsFile())
+        return false;
+
+    const auto jsonString = themeFile.loadFileAsString();
+    if (jsonString.isEmpty())
+        return false;
+
+    auto json = juce::JSON::parse(jsonString);
+    if (!json.isObject())
+        return false;
+
+    auto* obj = json.getDynamicObject();
+    if (obj == nullptr)
+        return false;
+
+    customThemeOverrides = jsonString;
+    currentTheme = Theme::Custom;
+    applyTheme(Theme::Custom);
+    notifyListeners();
+
+    return true;
 }
 
 bool ThemeManager::saveTheme(const std::string& filePath) const
 {
-    juce::ignoreUnused(filePath);
-    // TODO: Implement theme saving to JSON
-    return false;
+    juce::File themeFile(filePath);
+
+    juce::DynamicObject::Ptr obj = new juce::DynamicObject();
+    obj->setProperty("theme", static_cast<int>(currentTheme));
+
+    // Save color tokens
+    const auto& colors = getColors();
+    auto* colorObj = new juce::DynamicObject();
+    colorObj->setProperty("background", colors.background.toString());
+    colorObj->setProperty("panelBackground", colors.panelBackground.toString());
+    colorObj->setProperty("accentPrimary", colors.accentPrimary.toString());
+    colorObj->setProperty("textPrimary", colors.textPrimary.toString());
+    colorObj->setProperty("textSecondary", colors.textSecondary.toString());
+    obj->setProperty("colors", colorObj);
+
+    juce::var jsonVar(obj);
+    auto jsonString = juce::JSON::toString(jsonVar, true);
+
+    return themeFile.replaceWithText(jsonString);
 }
 
 void ThemeManager::addThemeChangeListener(std::function<void(Theme)> listener)
@@ -91,10 +140,79 @@ void ThemeManager::notifyListeners()
 
 void ThemeManager::applyTheme(Theme theme)
 {
-    juce::ignoreUnused(theme);
-    // TODO: Apply theme-specific color overrides
-    // This would modify the DesignSystem::Colors values
+    currentTheme = theme;
+
+    ultra::resetTokensToDefaults();
+
+    auto applyLightOverrides = [] {
+        ultra::applyTokenOverrides([](ultra::Tokens& tokens) {
+            tokens.color.bg0 = lighten(tokens.color.bg0, 0.92f);
+            tokens.color.bg1 = lighten(tokens.color.bg1, 0.88f);
+            tokens.color.bg2 = lighten(tokens.color.bg2, 0.82f);
+            tokens.color.textPrimary = darken(tokens.color.textPrimary, 0.75f);
+            tokens.color.textSecondary = darken(tokens.color.textSecondary, 0.55f);
+            tokens.color.panelBorder = tokens.color.panelBorder.withAlpha(0.35f);
+            tokens.color.shadowSoft = juce::Colours::black.withAlpha(0.25f);
+        });
+    };
+
+    auto applyHighContrastOverrides = [] {
+        ultra::applyTokenOverrides([](ultra::Tokens& tokens) {
+            tokens.color.bg0 = juce::Colours::black;
+            tokens.color.bg1 = juce::Colours::black.withBrightness(0.12f);
+            tokens.color.bg2 = juce::Colours::black.withBrightness(0.18f);
+            tokens.color.panelBorder = juce::Colours::white.withAlpha(0.85f);
+            tokens.color.textPrimary = juce::Colours::white;
+            tokens.color.textSecondary = juce::Colours::silver;
+            tokens.color.accentPrimary = juce::Colours::yellow;
+            tokens.color.accentSecondary = juce::Colours::aqua;
+            tokens.color.shadowSoft = juce::Colours::black.withAlpha(0.5f);
+        });
+    };
+
+    switch (theme)
+    {
+        case Theme::Dark:
+            // defaults already applied
+            break;
+        case Theme::Light:
+            applyLightOverrides();
+            break;
+        case Theme::HighContrast:
+            applyHighContrastOverrides();
+            break;
+        case Theme::Custom:
+            if (customThemeOverrides.isNotEmpty())
+                ultra::loadTokensFromJSON(customThemeOverrides);
+            break;
+    }
 }
+
+#if JUCE_UNIT_TESTS
+namespace
+{
+    struct ThemeManagerOverridesTest final : public juce::UnitTest
+    {
+        ThemeManagerOverridesTest() : juce::UnitTest("ThemeManager Ultra overrides", "UI") {}
+
+        void runTest() override
+        {
+            beginTest("Light theme nudges Ultra tokens");
+            ultra::resetTokensToDefaults();
+            ThemeManager manager;
+            const auto darkBg = ultra::tokens().color.bg0;
+            manager.setTheme(ThemeManager::Theme::Light);
+            expect(ultra::tokens().color.bg0 != darkBg);
+
+            beginTest("High contrast enforces white text");
+            manager.setTheme(ThemeManager::Theme::HighContrast);
+            expect(ultra::tokens().color.textPrimary == juce::Colours::white);
+        }
+    };
+
+    static ThemeManagerOverridesTest themeManagerOverridesTest;
+}
+#endif
 
 } // namespace daw::ui::lookandfeel
 

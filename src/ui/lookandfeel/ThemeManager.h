@@ -13,7 +13,7 @@ struct ColorTokens;
 
 /**
  * @brief Theme management system
- * 
+ *
  * Supports multiple themes (dark, light, custom) with runtime switching.
  * Follows DAW_DEV_RULES: accessibility support, high-contrast theme.
  */
@@ -75,7 +75,8 @@ public:
 private:
     Theme currentTheme{Theme::Dark};
     std::vector<std::function<void(Theme)>> listeners;
-    
+    juce::String customThemeOverrides;
+
     void notifyListeners();
     void applyTheme(Theme theme);
 };
