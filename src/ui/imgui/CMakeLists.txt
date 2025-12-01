@@ -182,3 +182,78 @@ if(BUILD_IMGUI_SMOKE_TEST)
 
     add_test(NAME ImGuiSmokeTest COMMAND imgui_smoke_test)
 endif()
+
+# ==============================================================================
+# GODMODE UI Components
+# ==============================================================================
+option(ENABLE_LUA_SCRIPTING "Enable Lua scripting support" OFF)
+
+# GODMODE Core Library - Reactive, Input, Render, Diagnostics, Layout
+add_library(cppmusic_godmode_ui STATIC
+    # Reactive data binding
+    ${CMAKE_SOURCE_DIR}/src/ui/core/reactive/Signal.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/core/reactive/ParameterSignal.hpp
+    
+    # Input routing
+    ${CMAKE_SOURCE_DIR}/src/ui/core/input/InputRouter.hpp
+    
+    # GPU rendering
+    ${CMAKE_SOURCE_DIR}/src/ui/core/render/WaveformRenderer.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/core/render/WaveformRenderer.cpp
+    
+    # Diagnostics
+    ${CMAKE_SOURCE_DIR}/src/ui/core/diagnostics/DiagnosticsOverlay.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/core/diagnostics/DiagnosticsOverlay.cpp
+    
+    # Layout persistence
+    ${CMAKE_SOURCE_DIR}/src/ui/core/layout/LayoutSerializer.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/core/layout/LayoutSerializer.cpp
+    
+    # Theme system
+    ${CMAKE_SOURCE_DIR}/src/ui/theme/ThemeManager.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/theme/ThemeManager.cpp
+    
+    # Internationalization
+    ${CMAKE_SOURCE_DIR}/src/ui/i18n/I18n.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/i18n/I18n.cpp
+    
+    # Lua scripting (stub implementation)
+    ${CMAKE_SOURCE_DIR}/src/ui/script/LuaVM.hpp
+    ${CMAKE_SOURCE_DIR}/src/ui/script/LuaVM.cpp
+)
+
+target_include_directories(cppmusic_godmode_ui PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+
+target_link_libraries(cppmusic_godmode_ui PUBLIC
+    imgui_backend
+)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(cppmusic_godmode_ui PRIVATE 
+        -Wno-conversion 
+        -Wno-sign-conversion
+    )
+endif()
+
+# Optional: Full Lua integration
+if(ENABLE_LUA_SCRIPTING)
+    find_package(Lua 5.4 QUIET)
+    if(NOT LUA_FOUND)
+        message(STATUS "Lua not found, using FetchContent")
+        FetchContent_Declare(
+            lua
+            GIT_REPOSITORY https://github.com/lua/lua.git
+            GIT_TAG        v5.4.6
+            GIT_SHALLOW    TRUE
+        )
+        FetchContent_MakeAvailable(lua)
+    endif()
+    target_compile_definitions(cppmusic_godmode_ui PUBLIC ENABLE_LUA_SCRIPTING=1)
+endif()
+
+# Link GODMODE to main ImGui UI
+target_link_libraries(cppmusic_imgui_ui PUBLIC cppmusic_godmode_ui)
