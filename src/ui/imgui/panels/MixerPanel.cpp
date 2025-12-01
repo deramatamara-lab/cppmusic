@@ -3,9 +3,16 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <random>
 
 namespace daw::ui::imgui
 {
+
+// Thread-local random generator for meter simulation
+namespace {
+    thread_local std::mt19937 rng{std::random_device{}()};
+    thread_local std::uniform_real_distribution<float> dist{0.0f, 1.0f};
+}
 
 MixerPanel::MixerPanel()
 {
@@ -402,12 +409,12 @@ void MixerPanel::updateMeters()
         
         if (!ch.muted)
         {
-            // Occasional peaks
+            // Occasional peaks using thread-safe random generator
             float peakChance = 0.05f;
-            if (static_cast<float>(rand()) / RAND_MAX < peakChance)
+            if (dist(rng) < peakChance)
             {
-                ch.peakL = std::min(1.0f, activity + 0.3f * static_cast<float>(rand()) / RAND_MAX);
-                ch.peakR = std::min(1.0f, activity + 0.3f * static_cast<float>(rand()) / RAND_MAX);
+                ch.peakL = std::min(1.0f, activity + 0.3f * dist(rng));
+                ch.peakR = std::min(1.0f, activity + 0.3f * dist(rng));
             }
             
             // RMS follows activity more closely

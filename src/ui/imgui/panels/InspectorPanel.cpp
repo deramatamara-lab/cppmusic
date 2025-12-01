@@ -142,9 +142,8 @@ void InspectorPanel::draw(bool& open, const Theme& theme)
     ImGui::PopStyleVar();
 }
 
-void InspectorPanel::drawProperty(PropertyDef& prop, const Theme& theme)
+void InspectorPanel::drawProperty(PropertyDef& prop, [[maybe_unused]] const Theme& theme)
 {
-    (void)theme.getTokens();  // Reserved for future color coding
     float scale = theme.getDpiScale();
     
     ImGui::PushID(prop.name.c_str());

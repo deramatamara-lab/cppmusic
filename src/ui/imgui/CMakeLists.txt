@@ -123,8 +123,13 @@ target_link_libraries(cppmusic_imgui_ui PUBLIC
     OpenGL::GL
 )
 
-# Disable overly strict warnings for ImGui code
+# Warning configuration:
+# - imgui_backend: Third-party ImGui code has many warnings with strict flags,
+#   disabled to avoid noise while still catching issues in our own code.
+# - cppmusic_imgui_ui: Only minimal warnings disabled (conversion) since ImGui
+#   uses many implicit conversions in its API that would require verbose casts.
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # Third-party ImGui code - disable all strict warnings
     target_compile_options(imgui_backend PRIVATE 
         -Wno-conversion 
         -Wno-sign-conversion 
@@ -134,6 +139,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wno-deprecated-enum-enum-conversion
         -Wno-old-style-cast
     )
+    # Our code - keep most strict warnings, only disable ImGui API conversion issues
     target_compile_options(cppmusic_imgui_ui PRIVATE 
         -Wno-conversion 
         -Wno-sign-conversion

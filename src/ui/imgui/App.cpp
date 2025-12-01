@@ -33,6 +33,8 @@ void PerformanceMetrics::update(float dt)
         drawCalls = drawData->CmdListsCount;
         vertexCount = drawData->TotalVtxCount;
         indexCount = drawData->TotalIdxCount;
+        // Note: clippedItems would require tracking during rendering
+        // and is reserved for future culling optimization metrics
     }
 }
 
