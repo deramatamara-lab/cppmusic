@@ -53,6 +53,47 @@ cmake --build build --target cppmusic_imgui_app
 
 See [docs/ui/ultra_ui.md](docs/ui/ultra_ui.md) for architecture details.
 
+## GODMODE UI System
+
+The GODMODE UI upgrade provides enterprise-grade features for professional DAW development:
+
+### Core Features
+
+- **Reactive Data Binding**: Frame-coalesced `Signal<T>` system for efficient UI updates
+- **Virtualized Views**: Handle 100k+ notes with stable 60fps scrolling
+- **GPU Acceleration**: OpenGL-based waveform and meter rendering
+- **Lua Scripting**: Sandboxed extension system for custom actions and panels
+- **Diagnostics Overlay**: Live performance metrics and Chrome trace export
+
+### Performance Targets
+
+| Metric | Target |
+|--------|--------|
+| Mean frame time | < 4ms |
+| P99 frame time | < 12ms |
+| Large dataset scroll | 60fps stable |
+
+### Documentation
+
+- [GODMODE Overview](docs/ui/godmode_ui.md) - Architecture and rationale
+- [Performance Budget](docs/ui/performance_budget.md) - Targets and measurement
+- [Virtualization](docs/ui/virtualization.md) - Techniques and tuning
+- [Lua Scripting](docs/ui/scripting.md) - API and examples
+- [Theme Tokens](docs/ui/theme_tokens.md) - Token specification
+
+### Build Options
+
+```bash
+# Enable Lua scripting (optional)
+cmake -DENABLE_LUA_SCRIPTING=ON ..
+
+# Run GODMODE tests
+ctest --output-on-failure -R "Reactive|Lua"
+
+# Run performance benchmarks
+./build/tests/perf/benchmark_ui_pipeline
+```
+
 ## Getting Started
 
 ### Prerequisites
