@@ -1,9 +1,10 @@
 # src/engine/CMakeLists.txt
-# Engine skeleton: AudioGraph and Transport
+# Engine skeleton: AudioGraph, Transport, and Scheduler
 
 add_library(engine_skeleton STATIC
     AudioGraph.cpp
     Transport.cpp
+    Scheduler.cpp
 )
 
 target_include_directories(engine_skeleton PUBLIC
