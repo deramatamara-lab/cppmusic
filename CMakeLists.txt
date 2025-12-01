@@ -19,6 +19,8 @@ option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(ENABLE_LTO "Enable Link Time Optimization" OFF)
 option(ENABLE_JUCE "Enable JUCE framework (stub for future use)" ON)
 option(ENABLE_PORTAUDIO "Enable PortAudio backend (stub for future use)" OFF)
+option(ENABLE_RUBBERBAND "Enable RubberBand time-stretching library" OFF)
+option(ENABLE_LILV_LV2 "Enable Lilv LV2 plugin hosting" OFF)
 
 # ==============================================================================
 # Include centralized toolchain flags
@@ -73,6 +75,42 @@ endif()
 if(ENABLE_PORTAUDIO)
     message(STATUS "PortAudio support: stub enabled (not yet implemented)")
     # TODO: Add PortAudio integration when ready
+endif()
+
+# ==============================================================================
+# RubberBand Time-Stretching Library
+# ==============================================================================
+if(ENABLE_RUBBERBAND)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(RUBBERBAND rubberband)
+    endif()
+    
+    if(RUBBERBAND_FOUND)
+        message(STATUS "RubberBand found: ${RUBBERBAND_LIBRARIES}")
+        add_compile_definitions(HAVE_RUBBERBAND=1)
+    else()
+        message(WARNING "RubberBand not found - time-stretch features will be limited")
+        set(ENABLE_RUBBERBAND OFF)
+    endif()
+endif()
+
+# ==============================================================================
+# Lilv LV2 Plugin Hosting
+# ==============================================================================
+if(ENABLE_LILV_LV2)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(LILV lilv-0)
+    endif()
+    
+    if(LILV_FOUND)
+        message(STATUS "Lilv found: ${LILV_LIBRARIES}")
+        add_compile_definitions(HAVE_LILV_LV2=1)
+    else()
+        message(WARNING "Lilv not found - LV2 plugin support disabled")
+        set(ENABLE_LILV_LV2 OFF)
+    endif()
 endif()
 
 # ==============================================================================

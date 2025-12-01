@@ -116,12 +116,18 @@ void testProbabilityDeterministic() {
     uint64_t seed = 12345;
     bool result1 = cppmusic::model::Pattern::evaluateNoteCondition(note, 0, seed);
     bool result2 = cppmusic::model::Pattern::evaluateNoteCondition(note, 0, seed);
-    assert(result1 == result2);
+    if (result1 != result2) {
+        std::cerr << "FAILED: deterministic results should match" << std::endl;
+        std::abort();
+    }
     
     // Same seed with same iteration should always produce same result
     for (int i = 0; i < 5; ++i) {
         bool r = cppmusic::model::Pattern::evaluateNoteCondition(note, 0, seed);
-        assert(r == result1);
+        if (r != result1) {
+            std::cerr << "FAILED: results should be consistent" << std::endl;
+            std::abort();
+        }
     }
     
     std::cout << "    PASSED" << std::endl;
@@ -136,7 +142,10 @@ void testProbabilityZero() {
     
     // Should never play
     for (uint32_t i = 0; i < 10; ++i) {
-        assert(!cppmusic::model::Pattern::evaluateNoteCondition(note, i, i * 1000));
+        if (cppmusic::model::Pattern::evaluateNoteCondition(note, i, i * 1000)) {
+            std::cerr << "FAILED: zero probability note should not play" << std::endl;
+            std::abort();
+        }
     }
     
     std::cout << "    PASSED" << std::endl;
@@ -152,15 +161,20 @@ void testSwingAdjustment() {
     // On-beat note (beat 0) - no swing
     cppmusic::model::NoteEvent onBeat;
     onBeat.startBeat = 0.0;
-    double adjusted = pattern.getSwingAdjustedBeat(onBeat);
-    assert(approxEqual(adjusted, 0.0));
+    if (!approxEqual(pattern.getSwingAdjustedBeat(onBeat), 0.0)) {
+        std::cerr << "FAILED: on-beat note should not be swung" << std::endl;
+        std::abort();
+    }
     
     // Off-beat note (beat 0.5) - should be swung late
     cppmusic::model::NoteEvent offBeat;
     offBeat.startBeat = 0.5;
-    adjusted = pattern.getSwingAdjustedBeat(offBeat);
+    double adjustedOffBeat = pattern.getSwingAdjustedBeat(offBeat);
     // With 50% swing on 8th notes (0.5 beat resolution), offset should be 0.125 beats
-    assert(adjusted > 0.5);  // Should be later than original
+    if (adjustedOffBeat <= 0.5) {
+        std::cerr << "FAILED: off-beat note should be swung late, got " << adjustedOffBeat << std::endl;
+        std::abort();
+    }
     
     std::cout << "    PASSED" << std::endl;
 }
@@ -177,9 +191,12 @@ void testSwingOverride() {
     note.startBeat = 0.5;  // Off-beat
     note.swingAmount = -0.5f;  // Opposite swing
     
-    double adjusted = pattern.getSwingAdjustedBeat(note);
+    double adjustedNote = pattern.getSwingAdjustedBeat(note);
     // Should use note's swing, not pattern's
-    assert(adjusted < 0.5);  // Should be earlier than original
+    if (adjustedNote >= 0.5) {
+        std::cerr << "FAILED: note with negative swing override should be early, got " << adjustedNote << std::endl;
+        std::abort();
+    }
     
     std::cout << "    PASSED" << std::endl;
 }
