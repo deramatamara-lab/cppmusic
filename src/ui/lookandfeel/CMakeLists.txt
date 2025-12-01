@@ -31,6 +31,7 @@ target_include_directories(ui_lookandfeel PUBLIC
 
 target_link_libraries(ui_lookandfeel PUBLIC
     ui_effects
+    ui_animation
 )
 
 # Link JUCE modules

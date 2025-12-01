@@ -47,6 +47,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wno-array-bounds -Wno-maybe-uninitialized)
 endif()
 
+# GCC 13+ specific: disable stringop-overflow for JUCE DSP code (false positives in template instantiation)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.0")
+    add_compile_options(-Wno-stringop-overflow)
+endif()
+
 # ==============================================================================
 # JUCE Setup (conditional)
 # ==============================================================================
