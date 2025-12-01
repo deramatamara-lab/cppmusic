@@ -15,3 +15,6 @@ cppmusic_add_sanitizer_flags(model_layer)
 
 # Set position-independent code for static library
 set_target_properties(model_layer PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Asset database
+add_subdirectory(assets)

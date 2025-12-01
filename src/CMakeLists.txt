@@ -27,6 +27,12 @@ add_subdirectory(project)
 # Plugins module
 add_subdirectory(plugins)
 
+# Services module (undo, collab, integrity)
+add_subdirectory(services)
+
+# Platform module (sandbox, plugin inspection)
+add_subdirectory(platform)
+
 # Main application (optional)
 if(BUILD_MAIN_APP)
     add_subdirectory(main)
