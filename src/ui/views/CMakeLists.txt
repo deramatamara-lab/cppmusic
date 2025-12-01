@@ -33,6 +33,12 @@ target_include_directories(ui_views PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# Disable web browser component to avoid GTK/WebKit dependency
+target_compile_definitions(ui_views PUBLIC
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+)
+
 target_link_libraries(ui_views PUBLIC
     ui_lookandfeel
     project_model

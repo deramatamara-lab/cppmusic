@@ -33,6 +33,7 @@ target_include_directories(audio_engine PUBLIC
 
 target_link_libraries(audio_engine PUBLIC
     audio_dsp
+    audio_synthesis
     core_utilities
 )
 
