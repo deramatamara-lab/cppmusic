@@ -5,7 +5,8 @@ namespace daw::project
 {
 
 RemoveClipCommand::RemoveClipCommand(uint32_t clipIdParam)
-    : clipId(clipIdParam)
+    : UndoableCommand("Remove Clip")
+    , clipId_(clipIdParam)
 {
 }
 

@@ -53,6 +53,13 @@ endif()
 if(ENABLE_JUCE)
     include(cmake/JUCE.cmake)
     setup_juce()
+
+    # Disable JUCE web browser components to avoid WebKit dependency on Linux
+    # These are project-wide definitions so all targets inherit them
+    add_compile_definitions(
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+    )
 endif()
 
 # ==============================================================================

@@ -201,7 +201,8 @@ void testMemoryTracking()
     
     // In stub implementation, memory is tracked but always 0
     // Full implementation would show actual Lua memory usage
-    assert(initialMemory >= 0 && "Memory should be non-negative");
+    // Note: initialMemory is size_t which is always non-negative
+    assert(initialMemory == 0 || initialMemory > 0);  // Just verify it's a valid value
     
     vm.shutdown();
     std::cout << "  PASSED" << std::endl;
