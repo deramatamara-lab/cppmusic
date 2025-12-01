@@ -119,6 +119,7 @@ void testResourceLimits()
     // This test verifies the limits are set correctly
     // Actual enforcement requires full Lua integration
     const auto& currentLimits = vm.getLimits();
+    (void)currentLimits;  // Used in assert below
     assert(currentLimits.maxInstructions == 1000 && "Instruction limit should be set");
     assert(currentLimits.maxMemoryBytes == 1024 * 1024 && "Memory limit should be set");
     
@@ -176,10 +177,12 @@ void testExtensionAPI()
     
     // Get actions (should be empty initially)
     auto actions = ExtensionAPI::getAvailableActions();
+    (void)actions;  // Used in assert below
     assert(actions.empty() && "No actions registered initially");
     
     // Execute non-existent action
     bool executed = ExtensionAPI::executeAction("non.existent");
+    (void)executed;  // Used in assert below
     assert(!executed && "Non-existent action should fail");
     
     vm.shutdown();
@@ -194,6 +197,7 @@ void testMemoryTracking()
     vm.initialize();
     
     std::size_t initialMemory = vm.getMemoryUsage();
+    (void)initialMemory;  // Used in assert below
     
     // In stub implementation, memory is tracked but always 0
     // Full implementation would show actual Lua memory usage

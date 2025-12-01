@@ -179,12 +179,15 @@ void testLockFreeQueue()
     
     auto v1 = queue.tryPop();
     assert(v1.has_value() && *v1 == 1 && "Pop should return 1");
+    (void)v1;  // Suppress unused warning when NDEBUG
     
     auto v2 = queue.tryPop();
     assert(v2.has_value() && *v2 == 2 && "Pop should return 2");
+    (void)v2;
     
     auto v3 = queue.tryPop();
     assert(!v3.has_value() && "Pop from empty should return nullopt");
+    (void)v3;
     
     // Fill to capacity
     for (int i = 0; i < 63; ++i) {

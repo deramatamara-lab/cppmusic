@@ -36,6 +36,12 @@ struct Parameter
     {
         value = minValue + norm * (maxValue - minValue);
     }
+    
+    bool operator==(const Parameter& other) const
+    {
+        return id == other.id && name == other.name && 
+               std::abs(value - other.value) < 0.0001f;
+    }
 };
 
 /**

@@ -80,11 +80,12 @@ void benchmarkSignalFlush()
     
     SignalAggregator aggregator;
     std::vector<std::unique_ptr<Signal<float>>> signals;
+    std::vector<Subscription> subscriptions;  // Keep subscriptions alive
     
     // Create 100 signals
     for (int i = 0; i < 100; ++i) {
         auto sig = std::make_unique<Signal<float>>(0.0f);
-        sig->subscribe([](float) {});  // Empty callback
+        subscriptions.push_back(sig->subscribe([](float) {}));  // Keep subscription
         aggregator.registerSignal(sig.get());
         signals.push_back(std::move(sig));
     }
@@ -97,6 +98,7 @@ void benchmarkSignalFlush()
         aggregator.flush();
     });
     
+    (void)result;  // Suppress warning when NDEBUG
     assert(result.meanMs < 1.0f && "Signal flush should be < 1ms");
 }
 
@@ -127,6 +129,7 @@ void benchmarkNoteVirtualization()
         (void)count;
     });
     
+    (void)result;  // Suppress warning when NDEBUG
     assert(result.meanMs < 2.0f && "Visible query should be < 2ms");
 }
 
@@ -169,6 +172,7 @@ void benchmarkLargeDatasetScroll()
         (void)count;
     });
     
+    (void)result;  // Suppress warning when NDEBUG
     assert(result.p99Ms < TARGET_P99_FRAME_MS && "Scroll P99 should meet target");
 }
 
@@ -183,11 +187,12 @@ void benchmarkFullFrameSimulation()
     // Create signals for transport, mixer, etc.
     Signal<double> playheadSignal(0.0);
     Signal<float> bpmSignal(120.0f);
-    std::vector<Signal<float>> meterSignals;
+    std::vector<std::unique_ptr<Signal<float>>> meterSignals;
     
     for (int i = 0; i < 32; ++i) {
-        meterSignals.emplace_back(0.0f);
-        aggregator.registerSignal(&meterSignals.back());
+        auto signal = std::make_unique<Signal<float>>(0.0f);
+        aggregator.registerSignal(signal.get());
+        meterSignals.push_back(std::move(signal));
     }
     
     aggregator.registerSignal(&playheadSignal);
@@ -215,7 +220,7 @@ void benchmarkFullFrameSimulation()
         // Update signals (simulating audio thread updates)
         playheadSignal.set(playhead);
         for (auto& meter : meterSignals) {
-            meter.set(static_cast<float>(rand()) / RAND_MAX);
+            meter->set(static_cast<float>(rand()) / RAND_MAX);
         }
         
         // Flush all signals

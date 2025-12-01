@@ -137,11 +137,11 @@ struct Shadow
  */
 struct Elevations
 {
-    Shadow none;
-    Shadow sm{{0, 1, 2, 0, {0, 0, 0, 0.1f}}};
-    Shadow md{{0, 2, 4, 0, {0, 0, 0, 0.15f}}};
-    Shadow lg{{0, 4, 8, 0, {0, 0, 0, 0.2f}}};
-    Shadow xl{{0, 8, 16, 0, {0, 0, 0, 0.25f}}};
+    Shadow none{0.0f, 0.0f, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.0f}};
+    Shadow sm{0.0f, 1.0f, 2.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.1f}};
+    Shadow md{0.0f, 2.0f, 4.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.15f}};
+    Shadow lg{0.0f, 4.0f, 8.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.2f}};
+    Shadow xl{0.0f, 8.0f, 16.0f, 0.0f, {0.0f, 0.0f, 0.0f, 0.25f}};
 
     [[nodiscard]] const Shadow& get(const std::string& level) const;
 };
