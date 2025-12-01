@@ -9,7 +9,8 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-*.cmake
+# Note: cmake/*.cmake files are tracked, only ignore generated .cmake files outside cmake/
+!/cmake/*.cmake
 
 # Compiled object files
 *.o
