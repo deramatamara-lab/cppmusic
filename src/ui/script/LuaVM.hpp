@@ -120,7 +120,7 @@ public:
     /**
      * @brief Check if VM is initialized
      */
-    [[nodiscard]] bool isInitialized() const { return state_ != nullptr; }
+    [[nodiscard]] bool isInitialized() const { return initialized_; }
 
     /**
      * @brief Execute a Lua script string
@@ -220,6 +220,7 @@ private:
     static int api_set_transport_state(lua_State* L);
 
     lua_State* state_{nullptr};
+    bool initialized_{false};
     LuaLimits limits_;
     LuaSecurity security_;
     

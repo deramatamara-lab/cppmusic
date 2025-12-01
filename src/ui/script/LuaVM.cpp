@@ -29,13 +29,13 @@ LuaVM::~LuaVM()
 
 bool LuaVM::initialize()
 {
-    if (state_ != nullptr) {
+    if (initialized_) {
         return true;  // Already initialized
     }
     
     // In stub mode, we just mark as initialized
-    // Real implementation would call luaL_newstate()
-    state_ = reinterpret_cast<lua_State*>(1);  // Non-null marker
+    // Real implementation would call luaL_newstate() and set state_
+    initialized_ = true;
     
     setupSandbox();
     setupAPI();
@@ -45,9 +45,10 @@ bool LuaVM::initialize()
 
 void LuaVM::shutdown()
 {
-    if (state_ != nullptr) {
+    if (initialized_) {
         // Real implementation would call lua_close()
         state_ = nullptr;
+        initialized_ = false;
     }
     
     actions_.clear();

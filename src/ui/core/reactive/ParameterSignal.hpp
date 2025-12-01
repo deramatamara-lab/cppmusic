@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Signal.hpp"
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
