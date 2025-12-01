@@ -4,8 +4,11 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <cmath>
 #include <memory>
+#include <set>
+#include <string>
 #include <vector>
 
 // Minimal stub for testing arrangement metrics
