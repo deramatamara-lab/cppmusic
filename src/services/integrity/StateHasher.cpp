@@ -4,6 +4,7 @@
  */
 
 #include "StateHasher.hpp"
+#include <cctype>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -30,8 +31,16 @@ Hash256 Hash256::fromHex(const std::string& hex) {
         return hash;  // Invalid length
     }
     
+    // Validate hex characters before parsing
+    for (char c : hex) {
+        if (!std::isxdigit(static_cast<unsigned char>(c))) {
+            return hash;  // Invalid character
+        }
+    }
+    
     for (std::size_t i = 0; i < 32; ++i) {
         std::string byteStr = hex.substr(i * 2, 2);
+        // std::stoul is safe here since we validated input above
         hash.bytes[i] = static_cast<std::uint8_t>(std::stoul(byteStr, nullptr, 16));
     }
     

@@ -4,7 +4,7 @@
  * @brief Plugin latency and health analysis.
  */
 
-#include "SandboxRunner.hpp"
+#include "../sandbox/SandboxRunner.hpp"
 #include <chrono>
 #include <cstdint>
 #include <memory>

@@ -4,8 +4,10 @@
  */
 
 #include "services/integrity/StateHasher.hpp"
+#include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <iterator>
 #include <vector>
 
 using namespace cppmusic::services::integrity;
@@ -18,14 +20,9 @@ void testBasicHashing() {
     std::string data = "Hello, World!";
     Hash256 hash = StateHasher::hash(data);
     
-    // Hash should be non-zero
-    bool allZero = true;
-    for (const auto& byte : hash.bytes) {
-        if (byte != 0) {
-            allZero = false;
-            break;
-        }
-    }
+    // Hash should be non-zero - use std::all_of for clearer intent
+    bool allZero = std::all_of(std::begin(hash.bytes), std::end(hash.bytes),
+                               [](uint8_t byte) { return byte == 0; });
     assert(!allZero);
     
     std::cout << "  Basic hashing passed." << std::endl;
