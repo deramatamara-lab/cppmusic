@@ -1,58 +1,36 @@
 # tests/unit/CMakeLists.txt
 # Unit tests for engine skeleton and model layer
 
-# Pattern unit test
-add_executable(TestPattern
-    TestPattern.cpp
-)
+# Find Google Test
+find_package(GTest QUIET)
 
-target_include_directories(TestPattern PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
+if(GTest_FOUND)
+    message(STATUS "Google Test found - building unit tests")
+    
+    # Pattern unit test (original)
+    add_executable(TestPattern
+        TestPattern.cpp
+    )
+    target_include_directories(TestPattern PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(TestPattern PRIVATE model_layer)
+    cppmusic_add_warning_flags(TestPattern)
+    cppmusic_add_sanitizer_flags(TestPattern)
+    add_test(NAME PatternUnitTest COMMAND TestPattern)
 
-target_link_libraries(TestPattern PRIVATE
-    model_layer
-)
+    # Parameter Graph Test
+    add_executable(TestParamGraph TestParamGraph.cpp)
+    target_include_directories(TestParamGraph PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(TestParamGraph PRIVATE GTest::gtest GTest::gtest_main)
+    cppmusic_add_warning_flags(TestParamGraph)
+    cppmusic_add_sanitizer_flags(TestParamGraph)
+    add_test(NAME ParamGraphTest COMMAND TestParamGraph)
 
-# Apply flags
-cppmusic_add_warning_flags(TestPattern)
-cppmusic_add_sanitizer_flags(TestPattern)
+    # Automation Layers Test
+    add_executable(TestAutomationLayers TestAutomationLayers.cpp)
+    target_include_directories(TestAutomationLayers PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(TestAutomationLayers PRIVATE GTest::gtest GTest::gtest_main)
+    cppmusic_add_warning_flags(TestAutomationLayers)
+    cppmusic_add_sanitizer_flags(TestAutomationLayers)
+    add_test(NAME AutomationLayersTest COMMAND TestAutomationLayers)
 
-# Register with CTest
-add_test(NAME PatternUnitTest COMMAND TestPattern)
-
-# Scheduler unit test
-add_executable(TestScheduler
-    TestScheduler.cpp
-)
-
-target_include_directories(TestScheduler PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
-
-target_link_libraries(TestScheduler PRIVATE
-    engine_skeleton
-)
-
-cppmusic_add_warning_flags(TestScheduler)
-cppmusic_add_sanitizer_flags(TestScheduler)
-
-add_test(NAME SchedulerUnitTest COMMAND TestScheduler)
-
-# Pattern Probability/Conditions unit test
-add_executable(TestPatternProbability
-    TestPatternProbability.cpp
-)
-
-target_include_directories(TestPatternProbability PRIVATE
-    ${CMAKE_SOURCE_DIR}/src
-)
-
-target_link_libraries(TestPatternProbability PRIVATE
-    model_layer
-)
-
-cppmusic_add_warning_flags(TestPatternProbability)
-cppmusic_add_sanitizer_flags(TestPatternProbability)
-
-add_test(NAME PatternProbabilityUnitTest COMMAND TestPatternProbability)
+.

@@ -23,6 +23,23 @@ option(ENABLE_RUBBERBAND "Enable RubberBand time-stretching library" OFF)
 option(ENABLE_LILV_LV2 "Enable Lilv LV2 plugin hosting" OFF)
 
 # ==============================================================================
+# Advanced Feature Flags (Mega-Integration)
+# ==============================================================================
+option(ENABLE_GPU "Enable GPU DSP offloading (requires Vulkan)" OFF)
+option(ENABLE_COLLAB "Enable collaborative session features" OFF)
+option(ENABLE_AI "Enable AI-powered features (arrangement, tagging)" ON)
+option(ENABLE_SANDBOX "Enable plugin sandboxing" OFF)
+option(ENABLE_PERF_ADAPTIVE "Enable adaptive performance system" ON)
+
+# Feature status messages
+message(STATUS "Feature flags:")
+message(STATUS "  ENABLE_GPU: ${ENABLE_GPU}")
+message(STATUS "  ENABLE_COLLAB: ${ENABLE_COLLAB}")
+message(STATUS "  ENABLE_AI: ${ENABLE_AI}")
+message(STATUS "  ENABLE_SANDBOX: ${ENABLE_SANDBOX}")
+message(STATUS "  ENABLE_PERF_ADAPTIVE: ${ENABLE_PERF_ADAPTIVE}")
+
+# ==============================================================================
 # Include centralized toolchain flags
 # ==============================================================================
 include(cmake/ToolchainFlags.cmake)
@@ -78,40 +95,7 @@ if(ENABLE_PORTAUDIO)
 endif()
 
 # ==============================================================================
-# RubberBand Time-Stretching Library
-# ==============================================================================
-if(ENABLE_RUBBERBAND)
-    find_package(PkgConfig QUIET)
-    if(PkgConfig_FOUND)
-        pkg_check_modules(RUBBERBAND rubberband)
-    endif()
-    
-    if(RUBBERBAND_FOUND)
-        message(STATUS "RubberBand found: ${RUBBERBAND_LIBRARIES}")
-        add_compile_definitions(HAVE_RUBBERBAND=1)
-    else()
-        message(WARNING "RubberBand not found - time-stretch features will be limited")
-        set(ENABLE_RUBBERBAND OFF)
-    endif()
-endif()
-
-# ==============================================================================
-# Lilv LV2 Plugin Hosting
-# ==============================================================================
-if(ENABLE_LILV_LV2)
-    find_package(PkgConfig QUIET)
-    if(PkgConfig_FOUND)
-        pkg_check_modules(LILV lilv-0)
-    endif()
-    
-    if(LILV_FOUND)
-        message(STATUS "Lilv found: ${LILV_LIBRARIES}")
-        add_compile_definitions(HAVE_LILV_LV2=1)
-    else()
-        message(WARNING "Lilv not found - LV2 plugin support disabled")
-        set(ENABLE_LILV_LV2 OFF)
-    endif()
-endif()
+.
 
 # ==============================================================================
 # Testing

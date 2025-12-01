@@ -15,84 +15,7 @@ This project implements a zero-glitch, zero-crash DAW that prioritizes real-time
 - **Premium Look & Feel**: Token-driven design system with flagship macro panels
 - **Cross-Platform**: Windows, macOS, and Linux support with feature parity
 
-## Ultra UI Preview
 
-The cppmusic DAW features a modern ImGui-based interface designed for professional workflow:
-
-### Features
-- **Docking Layout**: Fully customizable panel arrangement with persistent layout
-- **Command Palette**: Quick actions via `Ctrl+K` with fuzzy search
-- **Theme System**: JSON-based tokens for colors, spacing, and typography
-- **High-DPI Support**: Crisp rendering at any scale factor
-- **Performance Overlay**: Real-time frame time and draw call monitoring (F12)
-
-### Panels
-- **Transport Bar**: Play/stop/record, BPM, time signature, CPU meter
-- **Browser**: File tree with search and filter chips
-- **Channel Rack**: Pattern step sequencer with velocity lane
-- **Piano Roll**: MIDI editor with scale lock and velocity editing
-- **Playlist**: Arrangement timeline with clip management
-- **Mixer**: Channel strips with animated peak/RMS meters
-- **Inspector**: Context-sensitive property editor
-
-### Running the UI
-
-```bash
-# Build the ImGui UI application
-cmake --build build --target cppmusic_imgui_app
-
-# Run with default theme
-./build/bin/cppmusic_imgui_app
-
-# Run with custom theme
-./build/bin/cppmusic_imgui_app --theme assets/themes/default.json
-
-# Command line options
-./build/bin/cppmusic_imgui_app --help
-```
-
-See [docs/ui/ultra_ui.md](docs/ui/ultra_ui.md) for architecture details.
-
-## GODMODE UI System
-
-The GODMODE UI upgrade provides enterprise-grade features for professional DAW development:
-
-### Core Features
-
-- **Reactive Data Binding**: Frame-coalesced `Signal<T>` system for efficient UI updates
-- **Virtualized Views**: Handle 100k+ notes with stable 60fps scrolling
-- **GPU Acceleration**: OpenGL-based waveform and meter rendering
-- **Lua Scripting**: Sandboxed extension system for custom actions and panels
-- **Diagnostics Overlay**: Live performance metrics and Chrome trace export
-
-### Performance Targets
-
-| Metric | Target |
-|--------|--------|
-| Mean frame time | < 4ms |
-| P99 frame time | < 12ms |
-| Large dataset scroll | 60fps stable |
-
-### Documentation
-
-- [GODMODE Overview](docs/ui/godmode_ui.md) - Architecture and rationale
-- [Performance Budget](docs/ui/performance_budget.md) - Targets and measurement
-- [Virtualization](docs/ui/virtualization.md) - Techniques and tuning
-- [Lua Scripting](docs/ui/scripting.md) - API and examples
-- [Theme Tokens](docs/ui/theme_tokens.md) - Token specification
-
-### Build Options
-
-```bash
-# Enable Lua scripting (optional)
-cmake -DENABLE_LUA_SCRIPTING=ON ..
-
-# Run GODMODE tests
-ctest --output-on-failure -R "Reactive|Lua"
-
-# Run performance benchmarks
-./build/tests/perf/benchmark_ui_pipeline
-```
 
 ## Getting Started
 
@@ -113,6 +36,23 @@ cmake ..
 cmake --build .
 ```
 
+### Feature Flags
+
+The following feature flags control optional subsystems:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `ENABLE_GPU` | OFF | GPU DSP offloading (requires Vulkan) |
+| `ENABLE_COLLAB` | OFF | Collaborative session features |
+| `ENABLE_AI` | ON | AI-powered features (arrangement, tagging) |
+| `ENABLE_SANDBOX` | OFF | Plugin sandboxing |
+| `ENABLE_PERF_ADAPTIVE` | ON | Adaptive performance system |
+
+Example with all features enabled:
+```bash
+cmake -DENABLE_GPU=ON -DENABLE_COLLAB=ON -DENABLE_SANDBOX=ON ..
+```
+
 ## Development
 
 **CRITICAL**: All development work must follow the [DAW Development Rules](docs/DAW_DEV_RULES.md). These rules are mandatory and violations will result in code rejection.
@@ -120,12 +60,26 @@ cmake --build .
 ### Quick Links
 
 - [Development Rules](docs/DAW_DEV_RULES.md) - **MANDATORY READING**
+- [Mega Overview](docs/MEGA_OVERVIEW.md) - Advanced subsystems architecture
 - [Contributing Guidelines](docs/CONTRIBUTING.md)
 - [Architecture Documentation](docs/ARCHITECTURE.md)
 - [Build Instructions](docs/BUILDING.md)
 - [Enforcement Guide](docs/ENFORCEMENT.md)
 - [Development Roadmap](docs/ROADMAP.md)
 - [Security Policy](docs/SECURITY.md)
+
+### Feature Documentation
+
+- [Parameters & Modulation](docs/parameters.md)
+- [Spectral Piano Roll](docs/pianoroll_spectral.md)
+- [GPU Offload](docs/gpu_offload.md)
+- [Automation Layers](docs/automation_layers.md)
+- [Collaboration](docs/collaboration.md)
+- [Asset Browser](docs/assets.md)
+- [Adaptive Performance](docs/performance_adaptive.md)
+- [Undo & Integrity](docs/undo_integrity.md)
+- [AI Arrangement](docs/ai_arrangement.md)
+- [Plugin Sandbox](docs/plugin_sandbox.md)
 
 ### Key Principles
 
@@ -141,14 +95,32 @@ cmake --build .
 src/
   core/          # Core utilities, math, logging
   engine/        # Engine skeleton (AudioGraph, Transport)
+    parameters/  # Reactive parameter system
+    automation/  # Automation clips and layers
+    performance/ # Adaptive performance system
+    concurrency/ # Lock-free async dispatcher
+    dsp/         # DSP processing nodes
+      offload/   # GPU offload framework
+      nodes/     # FFT, convolution nodes
   model/         # Model layer (Pattern, NoteEvent)
+    assets/      # Asset database
   audio/         # Audio engine, DSP, routing
   ai/            # AI models and inference
+    harmony/     # Harmonic analysis
+    tagging/     # Feature extraction and classification
+    arrangement/ # Arrangement analysis and suggestions
   project/       # Project model, tracks, automation
-  ui/            # UI components and views
+  services/      # Background services
+    undo/        # Undo service with delta compression
+    integrity/   # State hash verification
+    collab/      # Collaboration session handling
   platform/      # Platform-specific integration
+    sandbox/     # Plugin sandboxing
+    plugins/     # Plugin inspection
+  ui/            # UI components and views
 tests/           # Unit and integration tests
   unit/          # Unit tests for engine/model
+  perf/          # Performance benchmarks
 docs/            # Documentation
 cmake/           # CMake modules and toolchain flags
 ```
@@ -180,7 +152,10 @@ sudo apt install -y \
     libxext-dev \
     libfreetype6-dev \
     libcurl4-openssl-dev \
-    libasound2-dev
+    libasound2-dev \
+    libvulkan-dev \
+    sqlite3 \
+    libsqlite3-dev
 ```
 
 ### Build and Test
