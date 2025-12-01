@@ -16,3 +16,13 @@ cppmusic_add_sanitizer_flags(engine_skeleton)
 
 # Set position-independent code for static library
 set_target_properties(engine_skeleton PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Engine subsystems
+add_subdirectory(parameters)
+add_subdirectory(automation)
+add_subdirectory(performance)
+add_subdirectory(concurrency)
+
+# DSP offload (GPU support)
+add_subdirectory(dsp/offload)
+add_subdirectory(dsp/nodes)
