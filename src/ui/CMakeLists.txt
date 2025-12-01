@@ -76,3 +76,8 @@ endif()
 # Legacy compatibility alias
 add_library(ui_app ALIAS cppmusic_ui)
 
+# ImGui-based UI module (SDL2 + OpenGL)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/imgui/CMakeLists.txt")
+    add_subdirectory(imgui)
+endif()
+
