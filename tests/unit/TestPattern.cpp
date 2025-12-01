@@ -189,7 +189,8 @@ void testGetNotesInRange() {
     
     cppmusic::model::Pattern pattern;
     
-    // Add notes at various positions
+    // Add notes at various positions: beats 0, 2, 4, 6, 8, 10, 12, 14
+    // Each note has duration 1.0, so they end at: 1, 3, 5, 7, 9, 11, 13, 15
     for (int i = 0; i < 8; ++i) {
         cppmusic::model::NoteEvent note;
         note.pitch = static_cast<std::uint8_t>(60 + i);
@@ -198,12 +199,15 @@ void testGetNotesInRange() {
         pattern.addNote(note);
     }
     
-    // Query range [3.0, 7.0) - should include notes starting at 2, 4, 6
+    // Query range [3.0, 7.0)
+    // overlapsRange checks: startBeat < rangeEnd && getEndBeat() > rangeStart
     auto notesInRange = pattern.getNotesInRange(3.0, 7.0);
     
-    // Note at beat 2 (ends at 3) should NOT be included (ends exactly at range start)
-    // Note at beat 4 (starts at 4, ends at 5) should be included
-    // Note at beat 6 (starts at 6, ends at 7) should be included
+    // Note at beat 0 (ends 1): 0 < 7 && 1 > 3 = false (doesn't overlap)
+    // Note at beat 2 (ends 3): 2 < 7 && 3 > 3 = false (ends exactly at range start)
+    // Note at beat 4 (ends 5): 4 < 7 && 5 > 3 = true (overlaps)
+    // Note at beat 6 (ends 7): 6 < 7 && 7 > 3 = true (overlaps)
+    // Note at beat 8 (ends 9): 8 < 7 = false (starts after range)
     assert(notesInRange.size() == 2);
     
     std::cout << "    PASSED" << std::endl;

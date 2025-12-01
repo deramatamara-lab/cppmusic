@@ -41,6 +41,10 @@ struct NoteEvent {
 
     /**
      * @brief Comparison for sorting by start beat.
+     *
+     * Note: Uses exact floating-point comparison for sorting stability.
+     * Start beat values are typically set from quantized grid positions,
+     * where exact equality is meaningful. For range queries, use overlapsRange().
      */
     bool operator<(const NoteEvent& other) const noexcept {
         if (startBeat != other.startBeat) {
@@ -51,6 +55,10 @@ struct NoteEvent {
 
     /**
      * @brief Equality comparison.
+     *
+     * Note: Uses exact floating-point comparison. This is intentional for
+     * matching specific note events in remove operations. For approximate
+     * matching, implement a separate comparison with epsilon tolerance.
      */
     bool operator==(const NoteEvent& other) const noexcept {
         return pitch == other.pitch &&

@@ -237,7 +237,7 @@ void AudioGraph::prepare(double sampleRate, std::size_t blockSize) {
     }
 }
 
-void AudioGraph::processBlock([[maybe_unused]] std::size_t numSamples) noexcept {
+void AudioGraph::processBlock(std::size_t numSamples) noexcept {
     if (!pImpl->topologyValid) {
         return;
     }
