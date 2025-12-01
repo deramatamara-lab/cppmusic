@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  BUILD_TYPE: Release
+  CMAKE_GENERATOR: Ninja
+
+jobs:
+  build:
+    name: Build (${{ matrix.build_type }}, ${{ matrix.sanitizer }})
+    runs-on: ubuntu-24.04
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, RelWithDebInfo]
+        sanitizer: [none, asan, ubsan]
+        exclude:
+          # RelWithDebInfo with sanitizers is redundant
+          - build_type: RelWithDebInfo
+            sanitizer: asan
+          - build_type: RelWithDebInfo
+            sanitizer: ubsan
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            clang-tidy \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libsndfile1-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libxext-dev \
+            libfreetype6-dev \
+            libcurl4-openssl-dev \
+            libasound2-dev \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev
+
+      - name: Configure CMake
+        run: |
+          cmake_args="-G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}"
+          
+          # Add sanitizer flags
+          if [ "${{ matrix.sanitizer }}" = "asan" ]; then
+            cmake_args="$cmake_args -DENABLE_ASAN=ON"
+          elif [ "${{ matrix.sanitizer }}" = "ubsan" ]; then
+            cmake_args="$cmake_args -DENABLE_UBSAN=ON"
+          fi
+          
+          cmake -B build $cmake_args
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure --parallel 2
+        env:
+          # ASan/UBSan options
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+  clang-tidy:
+    name: Clang-Tidy Analysis
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            clang-tidy \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libsndfile1-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libxext-dev \
+            libfreetype6-dev \
+            libcurl4-openssl-dev \
+            libasound2-dev \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev
+
+      - name: Configure CMake (generate compile_commands.json)
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run clang-tidy on new engine/model sources
+        run: |
+          # Only run clang-tidy on our new foundational sources
+          SOURCES=$(find src/engine src/model -name "*.cpp" -o -name "*.hpp" 2>/dev/null || true)
+          if [ -n "$SOURCES" ]; then
+            echo "Running clang-tidy on: $SOURCES"
+            clang-tidy -p build $SOURCES || true
+          else
+            echo "No engine/model sources found for clang-tidy"
+          fi
+
+  benchmark:
+    name: Benchmark Placeholder
+    runs-on: ubuntu-24.04
+    if: false  # Skip until benchmarks are implemented
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Placeholder
+        run: echo "Benchmark tests not yet implemented"

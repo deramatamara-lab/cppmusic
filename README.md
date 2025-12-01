@@ -44,6 +44,8 @@ cmake --build .
 - [Architecture Documentation](docs/ARCHITECTURE.md)
 - [Build Instructions](docs/BUILDING.md)
 - [Enforcement Guide](docs/ENFORCEMENT.md)
+- [Development Roadmap](docs/ROADMAP.md)
+- [Security Policy](docs/SECURITY.md)
 
 ### Key Principles
 
@@ -58,13 +60,17 @@ cmake --build .
 ```
 src/
   core/          # Core utilities, math, logging
+  engine/        # Engine skeleton (AudioGraph, Transport)
+  model/         # Model layer (Pattern, NoteEvent)
   audio/         # Audio engine, DSP, routing
   ai/            # AI models and inference
   project/       # Project model, tracks, automation
   ui/            # UI components and views
   platform/      # Platform-specific integration
 tests/           # Unit and integration tests
+  unit/          # Unit tests for engine/model
 docs/            # Documentation
+cmake/           # CMake modules and toolchain flags
 ```
 
 ## Testing
@@ -72,6 +78,64 @@ docs/            # Documentation
 - Audio engine requires 80%+ code coverage
 - All tests must pass before merging
 - Real-time safety tests verify no allocations in audio thread
+- Run tests with: `ctest --output-on-failure`
+
+## Ubuntu Quick Start
+
+### Install Dependencies
+
+```bash
+sudo apt update
+sudo apt install -y \
+    build-essential \
+    clang \
+    cmake \
+    ninja-build \
+    pkg-config \
+    libsndfile1-dev \
+    libx11-dev \
+    libxrandr-dev \
+    libxcursor-dev \
+    libxinerama-dev \
+    libxext-dev \
+    libfreetype6-dev \
+    libcurl4-openssl-dev \
+    libasound2-dev
+```
+
+### Build and Test
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd cppmusic
+
+# Create build directory
+mkdir build && cd build
+
+# Configure (Release build)
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+
+# Build
+cmake --build .
+
+# Run tests
+ctest --output-on-failure
+```
+
+### Build with Sanitizers (Development)
+
+```bash
+# Debug build with AddressSanitizer
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON ..
+cmake --build .
+ctest --output-on-failure
+
+# Debug build with UndefinedBehaviorSanitizer
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_UBSAN=ON ..
+cmake --build .
+ctest --output-on-failure
+```
 
 ## License
 
