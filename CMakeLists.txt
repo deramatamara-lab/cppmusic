@@ -19,6 +19,8 @@ option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(ENABLE_LTO "Enable Link Time Optimization" OFF)
 option(ENABLE_JUCE "Enable JUCE framework (stub for future use)" ON)
 option(ENABLE_PORTAUDIO "Enable PortAudio backend (stub for future use)" OFF)
+option(ENABLE_RUBBERBAND "Enable RubberBand time-stretching library" OFF)
+option(ENABLE_LILV_LV2 "Enable Lilv LV2 plugin hosting" OFF)
 
 # ==============================================================================
 # Advanced Feature Flags (Mega-Integration)
@@ -93,44 +95,7 @@ if(ENABLE_PORTAUDIO)
 endif()
 
 # ==============================================================================
-# GPU Support (Vulkan)
-# ==============================================================================
-if(ENABLE_GPU)
-    find_package(Vulkan)
-    if(Vulkan_FOUND)
-        message(STATUS "Vulkan found: GPU features enabled")
-        add_compile_definitions(ENABLE_GPU)
-    else()
-        message(WARNING "ENABLE_GPU requested but Vulkan not found. GPU features disabled.")
-        set(ENABLE_GPU OFF)
-    endif()
-endif()
-
-# ==============================================================================
-# SQLite (for Asset Browser)
-# ==============================================================================
-find_package(SQLite3 QUIET)
-if(SQLite3_FOUND)
-    message(STATUS "SQLite3 found: Asset database enabled")
-else()
-    message(STATUS "SQLite3 not found: Using in-memory asset storage")
-endif()
-
-# ==============================================================================
-# Feature compile definitions
-# ==============================================================================
-if(ENABLE_COLLAB)
-    add_compile_definitions(ENABLE_COLLAB)
-endif()
-if(ENABLE_AI)
-    add_compile_definitions(ENABLE_AI)
-endif()
-if(ENABLE_SANDBOX)
-    add_compile_definitions(ENABLE_SANDBOX)
-endif()
-if(ENABLE_PERF_ADAPTIVE)
-    add_compile_definitions(ENABLE_PERF_ADAPTIVE)
-endif()
+.
 
 # ==============================================================================
 # Testing

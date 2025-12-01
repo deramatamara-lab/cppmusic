@@ -15,20 +15,82 @@ PlaylistPanel::PlaylistPanel()
 
 void PlaylistPanel::createDemoContent()
 {
-    // Add some demo clips
-    clips_.push_back({"Kick Pattern", 0, 0.0, 8.0, ImVec4(0.8f, 0.4f, 0.3f, 1.0f), false, false});
-    clips_.push_back({"Kick Pattern", 0, 16.0, 8.0, ImVec4(0.8f, 0.4f, 0.3f, 1.0f), false, false});
+    // Add some demo clips with deep-edit properties
+    PatternClip clip1;
+    clip1.name = "Kick Pattern";
+    clip1.trackIndex = 0;
+    clip1.startBeats = 0.0;
+    clip1.lengthBeats = 8.0;
+    clip1.color = ImVec4(0.8f, 0.4f, 0.3f, 1.0f);
+    clips_.push_back(clip1);
     
-    clips_.push_back({"Bassline A", 1, 0.0, 16.0, ImVec4(0.3f, 0.5f, 0.8f, 1.0f), false, false});
-    clips_.push_back({"Bassline B", 1, 16.0, 8.0, ImVec4(0.4f, 0.6f, 0.8f, 1.0f), false, false});
+    PatternClip clip2;
+    clip2.name = "Kick Pattern";
+    clip2.trackIndex = 0;
+    clip2.startBeats = 16.0;
+    clip2.lengthBeats = 8.0;
+    clip2.color = ImVec4(0.8f, 0.4f, 0.3f, 1.0f);
+    clips_.push_back(clip2);
     
-    clips_.push_back({"Chord Prog", 2, 0.0, 16.0, ImVec4(0.5f, 0.8f, 0.4f, 1.0f), false, false});
-    clips_.push_back({"Chord Prog", 2, 16.0, 8.0, ImVec4(0.5f, 0.8f, 0.4f, 1.0f), false, false});
+    PatternClip clip3;
+    clip3.name = "Bassline A";
+    clip3.trackIndex = 1;
+    clip3.startBeats = 0.0;
+    clip3.lengthBeats = 16.0;
+    clip3.color = ImVec4(0.3f, 0.5f, 0.8f, 1.0f);
+    clip3.transpose = -12;  // Octave down
+    clips_.push_back(clip3);
     
-    clips_.push_back({"Lead Melody", 3, 8.0, 8.0, ImVec4(0.9f, 0.7f, 0.3f, 1.0f), false, false});
-    clips_.push_back({"Lead Hook", 3, 16.0, 8.0, ImVec4(0.9f, 0.6f, 0.2f, 1.0f), false, false});
+    PatternClip clip4;
+    clip4.name = "Bassline B";
+    clip4.trackIndex = 1;
+    clip4.startBeats = 16.0;
+    clip4.lengthBeats = 8.0;
+    clip4.color = ImVec4(0.4f, 0.6f, 0.8f, 1.0f);
+    clips_.push_back(clip4);
     
-    clips_.push_back({"Pad Swell", 4, 0.0, 24.0, ImVec4(0.6f, 0.4f, 0.7f, 1.0f), false, false});
+    PatternClip clip5;
+    clip5.name = "Chord Prog";
+    clip5.trackIndex = 2;
+    clip5.startBeats = 0.0;
+    clip5.lengthBeats = 16.0;
+    clip5.color = ImVec4(0.5f, 0.8f, 0.4f, 1.0f);
+    clips_.push_back(clip5);
+    
+    PatternClip clip6;
+    clip6.name = "Chord Prog";
+    clip6.trackIndex = 2;
+    clip6.startBeats = 16.0;
+    clip6.lengthBeats = 8.0;
+    clip6.color = ImVec4(0.5f, 0.8f, 0.4f, 1.0f);
+    clip6.stretchEnabled = true;
+    clip6.stretchRatio = 1.5;  // Stretched
+    clips_.push_back(clip6);
+    
+    PatternClip clip7;
+    clip7.name = "Lead Melody";
+    clip7.trackIndex = 3;
+    clip7.startBeats = 8.0;
+    clip7.lengthBeats = 8.0;
+    clip7.color = ImVec4(0.9f, 0.7f, 0.3f, 1.0f);
+    clips_.push_back(clip7);
+    
+    PatternClip clip8;
+    clip8.name = "Lead Hook";
+    clip8.trackIndex = 3;
+    clip8.startBeats = 16.0;
+    clip8.lengthBeats = 8.0;
+    clip8.color = ImVec4(0.9f, 0.6f, 0.2f, 1.0f);
+    clip8.gain = 0.8f;  // Slightly quieter
+    clips_.push_back(clip8);
+    
+    PatternClip clip9;
+    clip9.name = "Pad Swell";
+    clip9.trackIndex = 4;
+    clip9.startBeats = 0.0;
+    clip9.lengthBeats = 24.0;
+    clip9.color = ImVec4(0.6f, 0.4f, 0.7f, 1.0f);
+    clips_.push_back(clip9);
 }
 
 void PlaylistPanel::addClip(const PatternClip& clip)
@@ -45,48 +107,43 @@ void PlaylistPanel::draw(bool& open, const Theme& theme)
     
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     
-    if (ImGui::Begin("Playlist", &open))
+    if (ImGui::Begin("Playlist", &open, ImGuiWindowFlags_MenuBar))
     {
+        // Menu bar
+        if (ImGui::BeginMenuBar())
+        {
+            if (ImGui::BeginMenu("Edit"))
+            {
+                if (ImGui::MenuItem("Make Unique", "Ctrl+U")) 
+                {
+                    if (selectedClip_) makeClipUnique(selectedClip_);
+                }
+                if (ImGui::MenuItem("Consolidate", "Ctrl+J")) consolidateSelection();
+                ImGui::Separator();
+                if (ImGui::MenuItem("Slice at Playhead", "S")) 
+                {
+                    if (selectedClip_) sliceClipAtPosition(selectedClip_, playheadPosition_);
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("View"))
+            {
+                ImGui::MenuItem("Loop Region", nullptr, &loopEnabled_);
+                ImGui::MenuItem("Follow Playhead", nullptr, &playheadFollowing_);
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        
         ImVec2 contentSize = ImGui::GetContentRegionAvail();
         float headerWidth = 120.0f * scale;
         float timelineHeight = 24.0f * scale;
         
         // Toolbar
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(tokens.spacingSm * scale, tokens.spacingXs * scale));
-        if (ImGui::BeginChild("##PlaylistToolbar", ImVec2(0, 28 * scale), true))
+        if (ImGui::BeginChild("##PlaylistToolbar", ImVec2(0, 32 * scale), true))
         {
-            ImGui::Checkbox("Snap", &snapEnabled_);
-            ImGui::SameLine();
-            
-            ImGui::SetNextItemWidth(60 * scale);
-            const char* snapItems[] = {"1", "1/2", "1/4", "1/8", "1/16"};
-            int snapIdx = 2;
-            switch (snapDivision_)
-            {
-                case 1: snapIdx = 0; break;
-                case 2: snapIdx = 1; break;
-                case 4: snapIdx = 2; break;
-                case 8: snapIdx = 3; break;
-                case 16: snapIdx = 4; break;
-                default: break;
-            }
-            if (ImGui::Combo("##SnapDiv", &snapIdx, snapItems, 5))
-            {
-                int divisions[] = {1, 2, 4, 8, 16};
-                snapDivision_ = divisions[snapIdx];
-            }
-            
-            ImGui::SameLine();
-            
-            // Zoom
-            float rightPadding = 150.0f * scale;
-            ImGui::SameLine(ImGui::GetWindowWidth() - rightPadding);
-            
-            if (ImGui::Button("-##zoom")) { zoomX_ = std::max(0.25f, zoomX_ - 0.25f); }
-            ImGui::SameLine();
-            ImGui::Text("%.0f%%", zoomX_ * 100);
-            ImGui::SameLine();
-            if (ImGui::Button("+##zoom")) { zoomX_ = std::min(4.0f, zoomX_ + 0.25f); }
+            drawToolbar(theme);
         }
         ImGui::EndChild();
         ImGui::PopStyleVar();
@@ -97,11 +154,15 @@ void PlaylistPanel::draw(bool& open, const Theme& theme)
         if (ImGui::BeginChild("##Timeline", ImVec2(0, timelineHeight), false))
         {
             drawTimeline(theme);
+            if (loopEnabled_)
+            {
+                drawLoopRegion(theme);
+            }
         }
         ImGui::EndChild();
         
         // Track headers + clips area
-        float remainingHeight = contentSize.y - 28 * scale - timelineHeight;
+        float remainingHeight = contentSize.y - 32 * scale - timelineHeight;
         
         // Track headers
         if (ImGui::BeginChild("##TrackHeaders", ImVec2(headerWidth, remainingHeight), true))
@@ -144,6 +205,79 @@ void PlaylistPanel::draw(bool& open, const Theme& theme)
     ImGui::End();
     
     ImGui::PopStyleVar();
+}
+
+void PlaylistPanel::drawToolbar(const Theme& theme)
+{
+    float scale = theme.getDpiScale();
+    
+    // Tool buttons
+    const char* toolNames[] = {"Select", "Slice", "Slip", "Stretch", "Draw"};
+    for (int i = 0; i < 5; ++i)
+    {
+        if (i > 0) ImGui::SameLine();
+        
+        bool isActive = (static_cast<int>(currentTool_) == i);
+        if (isActive)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, theme.getTokens().buttonActive);
+        }
+        
+        if (ImGui::Button(toolNames[i]))
+        {
+            currentTool_ = static_cast<PlaylistTool>(i);
+        }
+        
+        if (isActive)
+        {
+            ImGui::PopStyleColor();
+        }
+    }
+    
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+    
+    // Snap controls
+    ImGui::Checkbox("Snap", &snapEnabled_);
+    ImGui::SameLine();
+    
+    ImGui::SetNextItemWidth(60 * scale);
+    const char* snapItems[] = {"1", "1/2", "1/4", "1/8", "1/16"};
+    int snapIdx = 2;
+    switch (snapDivision_)
+    {
+        case 1: snapIdx = 0; break;
+        case 2: snapIdx = 1; break;
+        case 4: snapIdx = 2; break;
+        case 8: snapIdx = 3; break;
+        case 16: snapIdx = 4; break;
+        default: break;
+    }
+    if (ImGui::Combo("##SnapDiv", &snapIdx, snapItems, 5))
+    {
+        int divisions[] = {1, 2, 4, 8, 16};
+        snapDivision_ = divisions[snapIdx];
+    }
+    
+    ImGui::SameLine();
+    ImGui::Separator();
+    ImGui::SameLine();
+    
+    // Loop toggle
+    ImGui::Checkbox("Loop", &loopEnabled_);
+    
+    ImGui::SameLine();
+    
+    // Zoom controls
+    float rightPadding = 150.0f * scale;
+    ImGui::SameLine(ImGui::GetWindowWidth() - rightPadding);
+    
+    if (ImGui::Button("-##zoom")) { zoomX_ = std::max(0.25f, zoomX_ - 0.25f); }
+    ImGui::SameLine();
+    ImGui::Text("%.0f%%", zoomX_ * 100);
+    ImGui::SameLine();
+    if (ImGui::Button("+##zoom")) { zoomX_ = std::min(4.0f, zoomX_ + 0.25f); }
 }
 
 void PlaylistPanel::drawTimeline(const Theme& theme)
@@ -402,6 +536,182 @@ double PlaylistPanel::snapToGrid(double beats) const
     if (!snapEnabled_) return beats;
     double gridSize = 1.0 / snapDivision_;
     return std::round(beats / gridSize) * gridSize;
+}
+
+void PlaylistPanel::drawLoopRegion(const Theme& /*theme*/)
+{
+    float scale = 1.0f; // Use default scale
+    
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImVec2 size = ImGui::GetContentRegionAvail();
+    
+    float beatWidth = pixelsPerBeat_ * scale * zoomX_;
+    
+    float loopStartX = pos.x + static_cast<float>(loopStart_ - scrollX_) * beatWidth;
+    float loopEndX = pos.x + static_cast<float>(loopEnd_ - scrollX_) * beatWidth;
+    
+    // Loop region background
+    ImU32 loopColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.6f, 0.9f, 0.2f));
+    drawList->AddRectFilled(
+        ImVec2(loopStartX, pos.y),
+        ImVec2(loopEndX, pos.y + size.y),
+        loopColor
+    );
+    
+    // Loop markers
+    ImU32 markerColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.3f, 0.6f, 0.9f, 1.0f));
+    drawList->AddLine(ImVec2(loopStartX, pos.y), ImVec2(loopStartX, pos.y + size.y), markerColor, 2.0f);
+    drawList->AddLine(ImVec2(loopEndX, pos.y), ImVec2(loopEndX, pos.y + size.y), markerColor, 2.0f);
+    
+    // Loop bracket indicators
+    drawList->AddTriangleFilled(
+        ImVec2(loopStartX, pos.y),
+        ImVec2(loopStartX + 8, pos.y),
+        ImVec2(loopStartX, pos.y + 8),
+        markerColor
+    );
+    drawList->AddTriangleFilled(
+        ImVec2(loopEndX - 8, pos.y),
+        ImVec2(loopEndX, pos.y),
+        ImVec2(loopEndX, pos.y + 8),
+        markerColor
+    );
+}
+
+void PlaylistPanel::drawClipWarpMarkers(const PatternClip& clip, const Theme& theme, 
+                                         ImVec2 clipPos, ImVec2 clipSize)
+{
+    if (clip.warpMarkers.empty()) return;
+    
+    float scale = theme.getDpiScale();
+    float beatWidth = pixelsPerBeat_ * scale * zoomX_;
+    
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    
+    for (const auto& marker : clip.warpMarkers)
+    {
+        float markerX = clipPos.x + static_cast<float>(marker.sourceBeat) * beatWidth;
+        
+        if (markerX < clipPos.x || markerX > clipPos.x + clipSize.x) continue;
+        
+        ImU32 markerColor = ImGui::ColorConvertFloat4ToU32(
+            marker.selected ? ImVec4(1.0f, 0.5f, 0.2f, 1.0f) : ImVec4(0.9f, 0.6f, 0.2f, 0.8f)
+        );
+        
+        // Warp marker triangle
+        drawList->AddTriangleFilled(
+            ImVec2(markerX - 4 * scale, clipPos.y),
+            ImVec2(markerX + 4 * scale, clipPos.y),
+            ImVec2(markerX, clipPos.y + 8 * scale),
+            markerColor
+        );
+        
+        // Vertical line
+        drawList->AddLine(
+            ImVec2(markerX, clipPos.y + 8 * scale),
+            ImVec2(markerX, clipPos.y + clipSize.y),
+            ImGui::ColorConvertFloat4ToU32(ImVec4(0.9f, 0.6f, 0.2f, 0.3f)),
+            1.0f
+        );
+    }
+}
+
+void PlaylistPanel::sliceClipAtPosition(PatternClip* clip, double position)
+{
+    if (!clip) return;
+    
+    // Check if position is within clip bounds
+    if (position <= clip->startBeats || position >= clip->startBeats + clip->lengthBeats)
+        return;
+    
+    double relativePosition = position - clip->startBeats;
+    
+    // Create second clip (after slice point)
+    PatternClip secondClip = *clip;
+    secondClip.startBeats = position;
+    secondClip.lengthBeats = clip->lengthBeats - relativePosition;
+    secondClip.slipOffset = clip->slipOffset + relativePosition;
+    secondClip.selected = false;
+    
+    // Modify original clip (before slice point)
+    clip->lengthBeats = relativePosition;
+    
+    // Add the new clip
+    clips_.push_back(secondClip);
+}
+
+void PlaylistPanel::makeClipUnique(PatternClip* clip)
+{
+    if (!clip) return;
+    
+    // Mark clip as unique (would typically create a copy of the pattern)
+    // For now just append "(unique)" to the name
+    clip->name += " (unique)";
+}
+
+void PlaylistPanel::consolidateSelection()
+{
+    // Find selected clips on the same track
+    std::vector<PatternClip*> selectedOnTrack;
+    int trackIndex = -1;
+    double minStart = 999999.0;
+    double maxEnd = 0.0;
+    
+    for (auto& clip : clips_)
+    {
+        if (clip.selected)
+        {
+            if (trackIndex == -1)
+            {
+                trackIndex = clip.trackIndex;
+            }
+            else if (clip.trackIndex != trackIndex)
+            {
+                // Selection spans multiple tracks - can't consolidate
+                return;
+            }
+            
+            selectedOnTrack.push_back(&clip);
+            minStart = std::min(minStart, clip.startBeats);
+            maxEnd = std::max(maxEnd, clip.startBeats + clip.lengthBeats);
+        }
+    }
+    
+    if (selectedOnTrack.size() < 2) return;
+    
+    // Create consolidated clip
+    PatternClip consolidated;
+    consolidated.name = "Consolidated";
+    consolidated.trackIndex = trackIndex;
+    consolidated.startBeats = minStart;
+    consolidated.lengthBeats = maxEnd - minStart;
+    consolidated.color = selectedOnTrack[0]->color;
+    consolidated.selected = true;
+    
+    // Remove original clips
+    clips_.erase(
+        std::remove_if(clips_.begin(), clips_.end(),
+            [](const PatternClip& c) { return c.selected; }),
+        clips_.end()
+    );
+    
+    // Add consolidated clip
+    clips_.push_back(consolidated);
+}
+
+void PlaylistPanel::fitClipToTempo(PatternClip* clip, double targetBPM)
+{
+    if (!clip) return;
+    
+    // Calculate stretch ratio based on original and target tempo
+    // Assuming original tempo is 120 BPM
+    double originalBPM = 120.0;
+    clip->stretchRatio = targetBPM / originalBPM;
+    clip->stretchEnabled = true;
+    
+    // Adjust clip length based on stretch
+    clip->lengthBeats *= clip->stretchRatio;
 }
 
 } // namespace daw::ui::imgui

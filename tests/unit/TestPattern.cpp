@@ -8,12 +8,14 @@
 #include "model/Pattern.hpp"
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 
 namespace {
 
 constexpr double kEpsilon = 1e-9;
 
+[[maybe_unused]]
 bool approxEqual(double a, double b, double epsilon = kEpsilon) {
     return std::abs(a - b) < epsilon;
 }
@@ -60,11 +62,26 @@ void testAddNote() {
     assert(pattern.getNoteCount() == 1);
     
     const auto* retrieved = pattern.getNote(0);
-    assert(retrieved != nullptr);
-    assert(retrieved->pitch == 60);
-    assert(retrieved->velocity == 100);
-    assert(approxEqual(retrieved->startBeat, 0.0));
-    assert(approxEqual(retrieved->durationBeats, 1.0));
+    if (retrieved == nullptr) {
+        std::cerr << "Failed: getNote returned nullptr" << std::endl;
+        std::abort();
+    }
+    if (retrieved->pitch != 60) {
+        std::cerr << "Failed: pitch mismatch" << std::endl;
+        std::abort();
+    }
+    if (retrieved->velocity != 100) {
+        std::cerr << "Failed: velocity mismatch" << std::endl;
+        std::abort();
+    }
+    if (!approxEqual(retrieved->startBeat, 0.0)) {
+        std::cerr << "Failed: startBeat mismatch" << std::endl;
+        std::abort();
+    }
+    if (!approxEqual(retrieved->durationBeats, 1.0)) {
+        std::cerr << "Failed: durationBeats mismatch" << std::endl;
+        std::abort();
+    }
     
     std::cout << "    PASSED" << std::endl;
 }
@@ -94,9 +111,18 @@ void testNotesSortedByStartBeat() {
     assert(pattern.getNoteCount() == 3);
     
     const auto& notes = pattern.getNotes();
-    assert(approxEqual(notes[0].startBeat, 0.5));
-    assert(approxEqual(notes[1].startBeat, 1.0));
-    assert(approxEqual(notes[2].startBeat, 2.0));
+    if (!approxEqual(notes[0].startBeat, 0.5)) {
+        std::cerr << "Failed: first note should have startBeat 0.5" << std::endl;
+        std::abort();
+    }
+    if (!approxEqual(notes[1].startBeat, 1.0)) {
+        std::cerr << "Failed: second note should have startBeat 1.0" << std::endl;
+        std::abort();
+    }
+    if (!approxEqual(notes[2].startBeat, 2.0)) {
+        std::cerr << "Failed: third note should have startBeat 2.0" << std::endl;
+        std::abort();
+    }
     
     std::cout << "    PASSED" << std::endl;
 }
@@ -120,14 +146,18 @@ void testRemoveNote() {
     assert(pattern.getNoteCount() == 2);
     
     // Remove first note
-    bool removed = pattern.removeNote(0);
-    assert(removed);
+    if (!pattern.removeNote(0)) {
+        std::cerr << "Failed: removeNote should succeed" << std::endl;
+        std::abort();
+    }
     assert(pattern.getNoteCount() == 1);
     assert(pattern.getNotes()[0].pitch == 62);
     
     // Try to remove out of bounds
-    removed = pattern.removeNote(10);
-    assert(!removed);
+    if (pattern.removeNote(10)) {
+        std::cerr << "Failed: removeNote out of bounds should fail" << std::endl;
+        std::abort();
+    }
     assert(pattern.getNoteCount() == 1);
     
     std::cout << "    PASSED" << std::endl;
