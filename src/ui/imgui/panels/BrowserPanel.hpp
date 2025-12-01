@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <functional>
 
 namespace daw::ui::imgui
 {

@@ -116,7 +116,8 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
     
     ImGui::PushID(index);
     
-    float rowHeight = showVelocityLane_ ? 60.0f * scale : 32.0f * scale;
+    // Row height is used for layout reference (velocity lane visibility)
+    (void)(showVelocityLane_ ? 60.0f * scale : 32.0f * scale);
     
     // Channel header (name, mute, solo)
     ImGui::BeginGroup();
@@ -276,11 +277,9 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
         }
     }
     
-    // Reset cursor
-    ImGui::SetCursorScreenPos(ImVec2(
-        cursorPos.x + static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing),
-        cursorPos.y + stepSize + stepSpacing
-    ));
+    // Submit a dummy item to properly grow parent bounds
+    float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
+    ImGui::Dummy(ImVec2(totalWidth, stepSize));
 }
 
 void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& channel, const Theme& theme)
@@ -341,7 +340,9 @@ void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& chan
         }
     }
     
-    ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + laneHeight + stepSpacing));
+    // Submit a dummy item to properly grow parent bounds
+    float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
+    ImGui::Dummy(ImVec2(totalWidth, laneHeight));
 }
 
 } // namespace daw::ui::imgui

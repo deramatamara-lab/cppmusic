@@ -144,7 +144,7 @@ void InspectorPanel::draw(bool& open, const Theme& theme)
 
 void InspectorPanel::drawProperty(PropertyDef& prop, const Theme& theme)
 {
-    const auto& tokens = theme.getTokens();
+    (void)theme.getTokens();  // Reserved for future color coding
     float scale = theme.getDpiScale();
     
     ImGui::PushID(prop.name.c_str());

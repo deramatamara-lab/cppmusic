@@ -229,7 +229,7 @@ void TransportBar::drawTimeSignature(const Theme& theme)
 void TransportBar::drawPositionDisplay(const Theme& theme)
 {
     const auto& tokens = theme.getTokens();
-    float scale = theme.getDpiScale();
+    (void)theme.getDpiScale();  // Reserved for future font scaling
     
     // Time display
     std::string timeStr = formatTime(state_.positionBeats, state_.bpm, state_.beatsPerBar);

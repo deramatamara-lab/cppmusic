@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Theme.hpp"
+#include <functional>
 
 namespace daw::ui::imgui
 {

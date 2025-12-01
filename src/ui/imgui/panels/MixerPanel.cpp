@@ -104,7 +104,7 @@ void MixerPanel::draw(bool& open, const Theme& theme)
     ImGui::PopStyleVar();
 }
 
-void MixerPanel::drawChannelStrip(int index, MixerChannel& channel, const Theme& theme, bool isMaster)
+void MixerPanel::drawChannelStrip(int /*index*/, MixerChannel& channel, const Theme& theme, bool isMaster)
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
@@ -394,7 +394,6 @@ void MixerPanel::updateMeters()
     // Simulate meter animation (in real implementation, get from audio engine)
     float dt = ImGui::GetIO().DeltaTime;
     float peakFalloff = 3.0f;  // dB per second equivalent
-    float rmsFalloff = 6.0f;
     
     auto updateChannel = [&](MixerChannel& ch) {
         // Simulate some activity

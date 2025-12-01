@@ -1,4 +1,10 @@
+// Must define math operators before any imgui includes
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+
 #include "App.hpp"
+#include "imgui_internal.h"
 #include <GL/gl.h>
 #include <iostream>
 #include <cmath>
