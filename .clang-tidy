@@ -47,6 +47,3 @@ HeaderFilterRegex: '.*'
 # Exclude third-party code
 ExcludeHeaderFilterRegex: '.*/(JUCE|catch2|gtest|gmock)/.*'
 
-# Exclude build directories
-ExcludeRegex: '.*/(build|cmake-build|\.git)/.*'
-

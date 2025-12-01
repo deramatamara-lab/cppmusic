@@ -3,6 +3,12 @@
 # Core module (must be first for dependencies)
 add_subdirectory(core)
 
+# Engine skeleton (foundational audio graph and transport)
+add_subdirectory(engine)
+
+# Model layer (pattern, note events)
+add_subdirectory(model)
+
 # Audio module
 add_subdirectory(audio)
 

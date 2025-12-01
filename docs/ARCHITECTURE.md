@@ -414,4 +414,217 @@ UI Request → InferenceEngine (Background) → AI Model → Results (Lock-Free 
 - **Memory Leak Detection**: Zero memory leaks in comprehensive test scenarios
 - **Cross-Platform Validation**: Automated testing on Windows, macOS, and Linux
 
+## Phase 1 Foundational Architecture
+
+### Engine Skeleton (`cppmusic::engine`)
+
+**Location**: `src/engine/`
+
+The engine skeleton provides the foundational audio graph and transport infrastructure:
+
+#### AudioGraph
+- **Node Registration**: Register/unregister `AudioNode` instances with unique IDs
+- **Edge Connections**: Connect node output ports to input ports
+- **Topology Rebuild**: Topological sort using Kahn's algorithm for cycle detection
+- **Block Processing**: Process nodes in sorted order (placeholder for DSP)
+
+#### Transport
+- **Sample-Accurate Position**: Beat and sample position tracking with atomics
+- **Tempo Control**: BPM setting with clamping (20-999 BPM)
+- **Time Signature**: Configurable numerator/denominator
+- **Thread Safety**: All state accessed via `std::atomic` for lock-free audio thread access
+
+### Model Layer (`cppmusic::model`)
+
+**Location**: `src/model/`
+
+The model layer provides pattern and note event storage:
+
+#### Pattern
+- **Note Storage**: Vector of `NoteEvent` structs (pitch, velocity, start, duration, channel)
+- **Length Computation**: `computeContentLength()` returns max of pattern length or last note end
+- **Range Queries**: `getNotesInRange()` for playback and display
+- **Automatic Sorting**: Notes sorted by start beat on insertion
+
+## Scheduling & Patterns
+
+### Pattern Playback Model
+- Patterns are first-class containers of MIDI note events
+- Each pattern has a defined length in beats
+- Patterns can be placed on tracks at specific positions
+- Looping and one-shot playback modes supported
+
+### Timing Resolution
+- Internal timing in double-precision beats
+- Sample-accurate scheduling via Transport
+- Sub-beat precision for humanization and micro-timing
+
+### Quantization
+- Grid-based quantization (1/4, 1/8, 1/16, etc.)
+- Swing and groove templates (planned)
+- Non-destructive quantization with original timing preserved
+
+## Mixer Routing Plan
+
+### Signal Flow
+```
+Track Sources (Patterns, Audio Clips)
+    ↓
+Track Strip (Gain, Pan, Mute, Solo)
+    ↓
+Insert Effects (per-track)
+    ↓
+Send/Return Buses
+    ↓
+Group Buses (submix)
+    ↓
+Master Bus (final processing)
+    ↓
+Audio Output
+```
+
+### Bus Types
+- **Track Buses**: One per track, mono or stereo
+- **Aux Buses**: For sends/returns (reverb, delay)
+- **Group Buses**: Submix multiple tracks (drums, vocals)
+- **Master Bus**: Final output processing
+
+### Routing Flexibility
+- Pre-fader and post-fader sends
+- Sidechain routing for compressors/gates
+- Multi-output instruments (planned)
+
+## Automation Concept
+
+### Automation Lanes
+- One or more automation lanes per track
+- Each lane controls a single parameter
+- Parameters can be any exposed track/plugin value
+
+### Automation Data
+- Stored as time-stamped control points
+- Interpolation modes: linear, curved, stepped
+- Sample-accurate playback via lock-free queues
+
+### Automation Recording
+- Touch: Write while touching control
+- Latch: Write until stop
+- Write: Overwrite existing automation
+- Read: Playback only
+
+## Plugin Hosting Roadmap
+
+### Phase 1 (Current): No Plugin Hosting
+- Internal effects and instruments only
+- Focus on core engine stability
+
+### Phase 2: LV2 Support
+- Linux-native plugin format
+- Process isolation via separate processes
+- IPC for audio/MIDI data
+
+### Phase 3: VST3 Support
+- Cross-platform plugin format
+- Steinberg VST3 SDK integration
+- GUI hosting in separate window
+
+### Plugin Sandboxing
+- Each plugin in isolated process
+- Crash recovery without host restart
+- CPU/memory resource limits
+- Timeout detection for stalled plugins
+
+## Persistence Format
+
+### Project File Structure
+```
+project.dawproj/
+  ├── project.json       # Main project metadata
+  ├── tracks/            # Track data
+  │   ├── track-001.json
+  │   └── track-002.json
+  ├── patterns/          # Pattern data
+  │   ├── pattern-001.json
+  │   └── pattern-002.json
+  ├── automation/        # Automation data
+  │   └── auto-001.json
+  └── assets/            # Audio files, samples
+      └── audio/
+```
+
+### Serialization
+- JSON for human-readable metadata
+- Binary for audio waveform data
+- Version field for migration compatibility
+- Checksum for integrity verification
+
+### Undo/Redo Persistence
+- Command pattern for all edits
+- Undo stack persisted in project
+- Redo stack cleared on new action
+
+## Concurrency Model
+
+### Thread Hierarchy
+
+| Thread | Priority | Purpose | Constraints |
+|--------|----------|---------|-------------|
+| Audio | Highest | `processBlock()` | No alloc, no lock, no exceptions |
+| MIDI | High | MIDI event processing | Bounded latency |
+| UI | Normal | User interface | Can block for I/O |
+| AI | Low | Background inference | Never block audio |
+| I/O | Low | File operations | Fully async |
+
+### Communication Patterns
+- **Audio ↔ UI**: Lock-free ring buffers, atomics
+- **Audio ↔ MIDI**: Lock-free queues
+- **UI ↔ AI**: Async callbacks, message passing
+- **UI ↔ I/O**: Async file operations with callbacks
+
+### Synchronization Primitives
+- `std::atomic<T>` for simple values
+- Lock-free queues for message passing
+- No mutexes in audio thread
+- Memory ordering explicit (`acquire`/`release`)
+
+## Extensibility
+
+### Plugin API (Future)
+- C++ plugin interface for internal extensions
+- Versioned API with backward compatibility
+- Plugin discovery and loading system
+
+### Scripting (Future)
+- Lua or JavaScript scripting for automation
+- Script access to project model (read-only during playback)
+- User-defined MIDI transformations
+
+### Custom DSP Nodes
+- `AudioNode` base class for custom processors
+- Register nodes with `AudioGraph`
+- Hot-reload support (planned)
+
+## Hardening
+
+### Build-Time Hardening
+- `-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wnull-dereference`
+- `-Werror` in CI (warnings as errors)
+- `-fstack-protector-strong` for stack protection
+- `-D_FORTIFY_SOURCE=2` for runtime buffer checks
+- `-fPIE -pie` for ASLR
+- `-Wl,-z,relro,-z,now` for GOT protection
+
+### Runtime Hardening
+- Address Sanitizer (ASAN) in CI
+- UndefinedBehavior Sanitizer (UBSAN) in CI
+- No raw `new`/`delete` in production code
+- RAII for all resource management
+- Bounds checking in debug builds
+
+### Audio Thread Safety
+- Static analysis for allocation detection
+- Runtime allocation tracking (debug builds)
+- `noexcept` on all audio thread functions
+- Graceful degradation on error (mute, bypass)
+
 This enhanced architecture represents a significant evolution of the CPPMusic DAW, incorporating cutting-edge audio processing, AI integration, professional animation systems, and comprehensive performance monitoring - making it truly "JAW DROPPING" in its capabilities and engineering excellence.
