@@ -92,6 +92,23 @@ function(cppmusic_add_sanitizer_flags target)
 endfunction()
 
 # ==============================================================================
+# Low-Latency Flags (opt-in, evaluate tradeoffs)
+# ==============================================================================
+function(cppmusic_add_low_latency_flags target)
+    if(NOT ENABLE_LOW_LATENCY)
+        return()
+    endif()
+    if(CPPMUSIC_COMPILER_IS_GNU OR CPPMUSIC_COMPILER_IS_CLANG)
+        target_compile_options(${target} PRIVATE
+            -ffast-math
+            -fno-exceptions
+            -fno-rtti
+        )
+        message(STATUS "Low-latency flags enabled for ${target}: -ffast-math -fno-exceptions -fno-rtti")
+    endif()
+endfunction()
+
+# ==============================================================================
 # Combined Function: Apply all flags to a target
 # ==============================================================================
 function(cppmusic_apply_all_flags target)
@@ -99,6 +116,7 @@ function(cppmusic_apply_all_flags target)
     cppmusic_add_security_flags(${target})
     cppmusic_add_lto_flags(${target})
     cppmusic_add_sanitizer_flags(${target})
+    cppmusic_add_low_latency_flags(${target})
 endfunction()
 
 # ==============================================================================
@@ -108,7 +126,7 @@ function(cppmusic_add_clang_tidy_target)
     find_program(CLANG_TIDY_EXE NAMES clang-tidy clang-tidy-18 clang-tidy-17 clang-tidy-16 clang-tidy-15)
     if(CLANG_TIDY_EXE)
         message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-        
+
         # Collect source files for clang-tidy
         file(GLOB_RECURSE CPPMUSIC_SOURCES
             "${CMAKE_SOURCE_DIR}/src/engine/*.cpp"
@@ -117,7 +135,7 @@ function(cppmusic_add_clang_tidy_target)
             "${CMAKE_SOURCE_DIR}/src/model/*.hpp"
             "${CMAKE_SOURCE_DIR}/tests/unit/*.cpp"
         )
-        
+
         if(CPPMUSIC_SOURCES)
             add_custom_target(clang-tidy
                 COMMAND ${CLANG_TIDY_EXE}

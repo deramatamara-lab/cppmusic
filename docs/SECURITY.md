@@ -53,9 +53,24 @@ Optional sanitizers for catching memory and undefined behavior issues:
 
 - **AddressSanitizer (ASAN)**: `ENABLE_ASAN=ON`
   - Detects buffer overflows, use-after-free, double-free
-  
+
 - **UndefinedBehaviorSanitizer (UBSAN)**: `ENABLE_UBSAN=ON`
   - Detects integer overflow, null pointer dereference, misaligned access
+
+### Low-Latency Flags (Opt-in)
+
+For ultra-low-latency scenarios, optional aggressive optimization flags can be enabled:
+
+```
+-ffast-math -fno-exceptions -fno-rtti
+```
+
+Enable with `ENABLE_LOW_LATENCY=ON`. **Tradeoffs**:
+- `-ffast-math`: May affect IEEE floating-point compliance
+- `-fno-exceptions`: Disables C++ exceptions (use noexcept everywhere)
+- `-fno-rtti`: Disables RTTI (no dynamic_cast, no typeid)
+
+Use only after evaluating impact on your specific use case.
 
 ## Runtime Security Practices
 

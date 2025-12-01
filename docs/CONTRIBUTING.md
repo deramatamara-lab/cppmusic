@@ -54,7 +54,9 @@ ctest --output-on-failure
 | `ENABLE_ASAN` | Enable AddressSanitizer | OFF |
 | `ENABLE_UBSAN` | Enable UndefinedBehaviorSanitizer | OFF |
 | `ENABLE_LTO` | Enable Link Time Optimization | OFF |
+| `ENABLE_LOW_LATENCY` | Enable low-latency flags (-ffast-math -fno-exceptions -fno-rtti) | OFF |
 | `ENABLE_JUCE` | Enable JUCE framework | ON |
+| `ENABLE_PORTAUDIO` | Enable PortAudio backend | OFF |
 | `BUILD_MAIN_APP` | Build main application | ON |
 
 ## Branching Strategy
