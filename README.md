@@ -11,8 +11,47 @@ This project implements a zero-glitch, zero-crash DAW that prioritizes real-time
 - **Real-Time Audio Engine**: Lock-free, allocation-free audio processing
 - **AI Integration**: Background AI processing with graceful fallbacks
 - **Professional UI**: Responsive, accessible, and fully dockable interface
-- **Premium Look & Feel**: Token-driven JUCE design system with flagship macro panels
+- **Ultra UI (ImGui)**: Modern, GPU-accelerated interface with Dear ImGui + SDL2 + OpenGL
+- **Premium Look & Feel**: Token-driven design system with flagship macro panels
 - **Cross-Platform**: Windows, macOS, and Linux support with feature parity
+
+## Ultra UI Preview
+
+The cppmusic DAW features a modern ImGui-based interface designed for professional workflow:
+
+### Features
+- **Docking Layout**: Fully customizable panel arrangement with persistent layout
+- **Command Palette**: Quick actions via `Ctrl+K` with fuzzy search
+- **Theme System**: JSON-based tokens for colors, spacing, and typography
+- **High-DPI Support**: Crisp rendering at any scale factor
+- **Performance Overlay**: Real-time frame time and draw call monitoring (F12)
+
+### Panels
+- **Transport Bar**: Play/stop/record, BPM, time signature, CPU meter
+- **Browser**: File tree with search and filter chips
+- **Channel Rack**: Pattern step sequencer with velocity lane
+- **Piano Roll**: MIDI editor with scale lock and velocity editing
+- **Playlist**: Arrangement timeline with clip management
+- **Mixer**: Channel strips with animated peak/RMS meters
+- **Inspector**: Context-sensitive property editor
+
+### Running the UI
+
+```bash
+# Build the ImGui UI application
+cmake --build build --target cppmusic_imgui_app
+
+# Run with default theme
+./build/bin/cppmusic_imgui_app
+
+# Run with custom theme
+./build/bin/cppmusic_imgui_app --theme assets/themes/default.json
+
+# Command line options
+./build/bin/cppmusic_imgui_app --help
+```
+
+See [docs/ui/ultra_ui.md](docs/ui/ultra_ui.md) for architecture details.
 
 ## Getting Started
 
