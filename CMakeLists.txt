@@ -64,12 +64,24 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wno-array-bounds -Wno-maybe-uninitialized)
 endif()
 
+# GCC 13+ specific: disable stringop-overflow for JUCE DSP code (false positives in template instantiation)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "13.0")
+    add_compile_options(-Wno-stringop-overflow)
+endif()
+
 # ==============================================================================
 # JUCE Setup (conditional)
 # ==============================================================================
 if(ENABLE_JUCE)
     include(cmake/JUCE.cmake)
     setup_juce()
+
+    # Disable JUCE web browser components to avoid WebKit dependency on Linux
+    # These are project-wide definitions so all targets inherit them
+    add_compile_definitions(
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+    )
 endif()
 
 # ==============================================================================

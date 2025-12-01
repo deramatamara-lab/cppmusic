@@ -1,0 +1,72 @@
+{
+  "name": "High Contrast",
+  "version": "1.0.0",
+  "description": "High contrast theme for accessibility",
+
+  "_comment_colors": "High contrast color scheme",
+
+  "primary": "#4D99FF",
+  "secondary": "#808099",
+  "accent": "#FF8833",
+  "success": "#33FF66",
+  "warning": "#FFCC33",
+  "error": "#FF4444",
+  "info": "#33AAFF",
+
+  "bgPrimary": "#000000",
+  "bgSecondary": "#0D0D0D",
+  "bgTertiary": "#1A1A1A",
+  "bgElevated": "#262626",
+
+  "textPrimary": "#FFFFFF",
+  "textSecondary": "#D9D9D9",
+  "textMuted": "#B3B3B3",
+  "textInverse": "#000000",
+
+  "borderLight": "#808080",
+  "borderMedium": "#B3B3B3",
+  "borderFocus": "#FFFF00",
+
+  "_comment_daw_colors": "DAW-specific high contrast colors",
+
+  "meterGreen": "#00FF55",
+  "meterYellow": "#FFFF00",
+  "meterRed": "#FF0000",
+  "meterBackground": "#1A1A1A",
+
+  "gridLine": "#40404080",
+  "gridLineBeat": "#606060B3",
+  "gridLineBar": "#808080E6",
+  "playhead": "#FF6666",
+  "selection": "#FFFF0066",
+  "noteActive": "#66CCFF",
+  "noteGhost": "#66CCFF66",
+
+  "playButton": "#00FF55",
+  "stopButton": "#FF4444",
+  "recordButton": "#FF0000",
+
+  "_comment_layout": "Spacing and layout",
+
+  "spacingXs": 4,
+  "spacingSm": 8,
+  "spacingMd": 16,
+  "spacingLg": 24,
+  "spacingXl": 32,
+  "radiusSm": 2,
+  "radiusMd": 4,
+  "radiusLg": 8,
+  "borderWidth": 2,
+  "scrollbarSize": 14,
+
+  "_comment_typography": "Typography settings",
+
+  "fontSizeXs": 11,
+  "fontSizeSm": 13,
+  "fontSizeMd": 15,
+  "fontSizeLg": 19,
+  "fontSizeXl": 26,
+
+  "fontScale": 1.0,
+  "dpiScale": 1.0
+}

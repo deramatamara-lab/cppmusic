@@ -21,7 +21,13 @@ target_include_directories(ui_animation PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Ensure GTK headers are available for juce_gui_extra on Linux
+# Disable web browser component to avoid GTK/WebKit dependency
+target_compile_definitions(ui_animation PUBLIC
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+)
+
+# Ensure GTK headers are available for juce_gui_basics on Linux
 if(UNIX AND NOT APPLE)
     # Try pkg-config first; fall back to standard GTK-3 include path
     find_package(PkgConfig QUIET)
@@ -34,12 +40,6 @@ if(UNIX AND NOT APPLE)
     else()
         # Fallback: standard GTK 3 include path on Debian/Ubuntu
         target_include_directories(ui_animation PRIVATE /usr/include/gtk-3.0)
-    endif()
-
-    # Also check for WebKit2GTK (for juce_gui_extra web browser components)
-    pkg_check_modules(WEBKIT2GTK QUIET webkit2gtk-4.1)
-    if(WEBKIT2GTK_INCLUDE_DIRS)
-        target_include_directories(ui_animation PRIVATE ${WEBKIT2GTK_INCLUDE_DIRS})
     endif()
 endif()
 

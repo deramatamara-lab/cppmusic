@@ -1,0 +1,67 @@
+{
+  "name": "Default Theme",
+  "version": "1.0.0",
+  "description": "cppmusic DAW default dark theme with professional styling",
+
+  "_comment_colors": "UI Colors in #RRGGBB or #RRGGBBAA format",
+
+  "windowBg": "#14141A",
+  "childBg": "#1A1A1F",
+  "popupBg": "#1E1E24",
+  "border": "#333340",
+  "titleBg": "#0F0F14",
+  "titleBgActive": "#265989",
+  "menuBarBg": "#1A1A1F",
+  "button": "#2E2E38",
+  "buttonHovered": "#477AAD",
+  "buttonActive": "#38689E",
+  "frameBg": "#1E1E24",
+  "frameBgHovered": "#2E2E38",
+  "frameBgActive": "#265989",
+  "text": "#EBEBEBF0",
+  "textDisabled": "#808085",
+
+  "_comment_daw_colors": "DAW-specific colors for meters, grids, and controls",
+
+  "meterGreen": "#33CC5A",
+  "meterYellow": "#F2D933",
+  "meterRed": "#F24040",
+  "meterBackground": "#1A1A1F",
+  "gridLine": "#33334080",
+  "gridLineBeat": "#4D4D59B3",
+  "gridLineBar": "#6666739E",
+  "playhead": "#F25959",
+  "selection": "#4D80B34D",
+  "noteOn": "#4D99E6",
+  "noteOff": "#336699",
+  "playButton": "#33BF66",
+  "stopButton": "#D94D4D",
+  "recordButton": "#F23333",
+
+  "_comment_layout": "Layout spacing in pixels (8px grid system)",
+
+  "spacingXs": 4,
+  "spacingSm": 8,
+  "spacingMd": 16,
+  "spacingLg": 24,
+  "spacingXl": 32,
+  "radiusSm": 2,
+  "radiusMd": 4,
+  "radiusLg": 8,
+  "borderWidth": 1,
+  "scrollbarSize": 12,
+
+  "_comment_typography": "Font sizes in points",
+
+  "fontSizeXs": 11,
+  "fontSizeSm": 12,
+  "fontSizeMd": 14,
+  "fontSizeLg": 18,
+  "fontSizeXl": 24,
+
+  "_comment_animation": "Animation timing in seconds",
+
+  "animDurationFast": 0.1,
+  "animDurationNormal": 0.2,
+  "animDurationSlow": 0.4
+}

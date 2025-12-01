@@ -200,24 +200,7 @@ private:
     uint32_t createdClipId{0};
 };
 
-/**
- * @brief Command to remove a clip
- */
-class RemoveClipCommand : public UndoableCommand
-{
-public:
-    explicit RemoveClipCommand(uint32_t clipId);
-    [[nodiscard]] bool execute(ProjectModel& model) override;
-    [[nodiscard]] bool undo(ProjectModel& model) override;
-
-private:
-    uint32_t clipId;
-    uint32_t trackId;
-    double startBeats;
-    double lengthBeats;
-    std::string label;
-    uint32_t patternId{0};
-};
+// Forward declaration - RemoveClipCommand is defined in commands/RemoveClipCommand.h
 
 /**
  * @brief Command to rename a track

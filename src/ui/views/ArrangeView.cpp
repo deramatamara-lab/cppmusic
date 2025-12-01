@@ -582,7 +582,7 @@ void ArrangeView::drawRuler(juce::Graphics& g, juce::Rectangle<int> bounds)
 void ArrangeView::drawTimelineSubdivisions(juce::Graphics& g,
                                            juce::Rectangle<int> bounds,
                                            double beatsPerBar,
-                                           SubdivisionLevel level)
+                                           int subdivLevel)
 {
     using namespace daw::ui::lookandfeel::DesignSystem;
 
@@ -596,7 +596,7 @@ void ArrangeView::drawTimelineSubdivisions(juce::Graphics& g,
     double quaternaryInterval = 0.125; // 32nds
 
     // Draw subdivisions based on level
-    switch (level)
+    switch (subdivLevel)
     {
         case 3: // ThirtySeconds
             // Draw 32nd note subdivisions
@@ -1271,7 +1271,7 @@ void ArrangeView::refreshTrackHeaders()
     }
 }
 
-void ArrangeView::drawClipResizeHandles(juce::Graphics& g, const daw::project::Clip* clip, juce::Rectangle<int> clipBounds, bool isSelected)
+void ArrangeView::drawClipResizeHandles(juce::Graphics& g, const daw::project::Clip* /*clip*/, juce::Rectangle<int> clipBounds, bool isSelected)
 {
     if (!isSelected)
         return;
@@ -1311,7 +1311,7 @@ void ArrangeView::drawClipResizeHandles(juce::Graphics& g, const daw::project::C
     }
 }
 
-void ArrangeView::drawClipFadeHandles(juce::Graphics& g, const daw::project::Clip* clip, juce::Rectangle<int> clipBounds)
+void ArrangeView::drawClipFadeHandles(juce::Graphics& g, const daw::project::Clip* /*clip*/, juce::Rectangle<int> clipBounds)
 {
     using namespace daw::ui::lookandfeel::DesignSystem;
     
@@ -1450,7 +1450,7 @@ juce::Colour ArrangeView::getClipTypeColour(const daw::project::Clip* clip)
     return juce::Colour(Colors::primary);
 }
 
-void ArrangeView::showClipContextMenu(const daw::project::Clip* clip, juce::Point<int> position)
+void ArrangeView::showClipContextMenu(const daw::project::Clip* clip, juce::Point<int> /*position*/)
 {
     juce::PopupMenu contextMenu;
     
@@ -1477,29 +1477,23 @@ void ArrangeView::showClipContextMenu(const daw::project::Clip* clip, juce::Poin
     
     // Color menu
     juce::PopupMenu colorMenu;
-    const auto colors = std::vector<juce::Colour>{
-        juce::Colour(Colors::primary),
-        juce::Colour(Colors::secondary), 
-        juce::Colour(Colors::warning),
-        juce::Colour(Colors::danger),
-        juce::Colour(Colors::success),
-        juce::Colour(Colors::meterNormal)
-    };
-    
-    for (size_t i = 0; i < colors.size(); ++i)
-    {
-        colorMenu.addColouredItem(static_cast<int>(20 + i), "Color " + juce::String(i + 1), colors[i], true);
-    }
+    using namespace daw::ui::lookandfeel::DesignSystem;
+    colorMenu.addColouredItem(20, "Primary", juce::Colour(Colors::primary), true);
+    colorMenu.addColouredItem(21, "Secondary", juce::Colour(Colors::secondary), true);
+    colorMenu.addColouredItem(22, "Warning", juce::Colour(Colors::warning), true);
+    colorMenu.addColouredItem(23, "Danger", juce::Colour(Colors::danger), true);
+    colorMenu.addColouredItem(24, "Success", juce::Colour(Colors::success), true);
+    colorMenu.addColouredItem(25, "Normal", juce::Colour(Colors::meterNormal), true);
     
     contextMenu.addSubMenu("Set Color", colorMenu);
     
-    // Show menu
-    const auto result = contextMenu.show();
-    
-    if (result > 0)
-    {
-        handleClipContextMenuResult(result, clip);
-    }
+    // Show menu asynchronously
+    contextMenu.showMenuAsync(juce::PopupMenu::Options(), [this, clip](int result) {
+        if (result > 0)
+        {
+            handleClipContextMenuResult(result, clip);
+        }
+    });
 }
 
 void ArrangeView::handleClipContextMenuResult(int result, const daw::project::Clip* clip)
@@ -1647,13 +1641,22 @@ void ArrangeView::pasteClips()
     // Paste clips with offset
     for (const auto& clipData : clipboard.clips)
     {
-        auto newClip = clipData;
         double offset = pastePosition - clipboard.originBeats;
-        newClip.setStartBeats(clipData.getStartBeats() + offset);
+        double newStart = clipData.getStartBeats() + offset;
         
-        auto* addedClip = projectModel->addClip(std::move(newClip));
+        auto* addedClip = projectModel->addClip(
+            clipData.getTrackId(),
+            newStart,
+            clipData.getLengthBeats(),
+            clipData.getLabel()
+        );
         if (addedClip)
         {
+            // Copy pattern linkage if any
+            if (clipData.hasPattern())
+            {
+                projectModel->linkClipToPattern(addedClip->getId(), clipData.getPatternId());
+            }
             selection.selectClip(addedClip->getId());
         }
     }
@@ -1688,12 +1691,20 @@ void ArrangeView::duplicateSelectedClips()
     {
         if (auto* clip = projectModel->getClip(clipId))
         {
-            auto duplicatedClip = *clip;
-            duplicatedClip.setStartBeats(maxEnd + 0.1); // Small gap after original clips
-            
-            auto* addedClip = projectModel->addClip(std::move(duplicatedClip));
+            // Create a new clip with the same properties but at a new position
+            auto* addedClip = projectModel->addClip(
+                clip->getTrackId(),
+                maxEnd + 0.1, // Small gap after original clips
+                clip->getLengthBeats(),
+                clip->getLabel()
+            );
             if (addedClip)
             {
+                // Copy pattern linkage if any
+                if (clip->hasPattern())
+                {
+                    projectModel->linkClipToPattern(addedClip->getId(), clip->getPatternId());
+                }
                 newSelection.selectClip(addedClip->getId());
             }
         }
@@ -1707,27 +1718,33 @@ void ArrangeView::splitClipAtPlayhead(const daw::project::Clip* clip)
     if (!projectModel || !clip || !engineContext) return;
     
     // Get current playhead position
-    const auto currentPosition = engineContext->getPlayheadBeats();
+    const auto currentPosition = engineContext->getPositionInBeats();
     
     // Check if playhead is within the clip
     if (currentPosition <= clip->getStartBeats() || currentPosition >= clip->getEndBeats())
         return; // Playhead not within clip
     
-    // Create two new clips from the split
-    auto leftClip = *clip;
-    auto rightClip = *clip;
+    const auto trackId = clip->getTrackId();
+    const auto label = clip->getLabel();
+    const auto patternId = clip->hasPattern() ? clip->getPatternId() : 0u;
+    const auto originalStart = clip->getStartBeats();
+    const auto originalEnd = clip->getEndBeats();
     
-    // Left clip: from start to playhead
-    leftClip.setLengthBeats(currentPosition - clip->getStartBeats());
-    
-    // Right clip: from playhead to end
-    rightClip.setStartBeats(currentPosition);
-    rightClip.setLengthBeats(clip->getEndBeats() - currentPosition);
-    
-    // Remove original clip and add split clips
+    // Remove original clip
     projectModel->removeClip(clip->getId());
-    projectModel->addClip(std::move(leftClip));
-    projectModel->addClip(std::move(rightClip));
+    
+    // Add left clip: from start to playhead
+    auto* leftClip = projectModel->addClip(trackId, originalStart, currentPosition - originalStart, label + " (L)");
+    
+    // Add right clip: from playhead to end
+    auto* rightClip = projectModel->addClip(trackId, currentPosition, originalEnd - currentPosition, label + " (R)");
+    
+    // Link patterns if needed
+    if (patternId != 0)
+    {
+        if (leftClip) projectModel->linkClipToPattern(leftClip->getId(), patternId);
+        if (rightClip) projectModel->linkClipToPattern(rightClip->getId(), patternId);
+    }
     
     refresh();
 }
@@ -1739,14 +1756,13 @@ void ArrangeView::deleteSelectedClips()
     std::vector<uint32_t> selectedClipIds;
     selectedClipIds.reserve(16);
 
-    for (const auto& track : projectModel->getTracks())
+    // Use ProjectModel's getClips() to iterate all clips
+    for (const auto* clip : projectModel->getClips())
     {
-        for (const auto& clip : track->getClips())
+        // Check if this clip is selected using the selection model
+        if (projectModel->getSelectionModel().isClipSelected(clip->getId()))
         {
-            if (clip->isSelected())
-            {
-                selectedClipIds.push_back(clip->getId());
-            }
+            selectedClipIds.push_back(clip->getId());
         }
     }
 

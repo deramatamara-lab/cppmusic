@@ -12,6 +12,7 @@ set(PROJECT_SOURCES
     ProjectMigrator.cpp
     UndoManager.cpp
     commands/MoveClipCommand.cpp
+    commands/RemoveClipCommand.cpp
     commands/TrimClipCommand.cpp
     commands/CreateClipCommand.cpp
     commands/GroupClipsCommand.cpp
@@ -32,6 +33,7 @@ set(PROJECT_HEADERS
     ProjectMigrator.h
     UndoManager.h
     commands/MoveClipCommand.h
+    commands/RemoveClipCommand.h
     commands/TrimClipCommand.h
     commands/CreateClipCommand.h
     commands/GroupClipsCommand.h

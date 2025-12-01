@@ -252,40 +252,7 @@ bool AddClipCommand::undo(ProjectModel& model)
     return false;
 }
 
-// ========== RemoveClipCommand ==========
-
-RemoveClipCommand::RemoveClipCommand(uint32_t clipId)
-    : UndoableCommand("Remove Clip")
-    , clipId(clipId)
-{
-}
-
-bool RemoveClipCommand::execute(ProjectModel& model)
-{
-    const auto* clip = model.getClip(clipId);
-    if (clip != nullptr)
-    {
-        trackId = clip->getTrackId();
-        startBeats = clip->getStartBeats();
-        lengthBeats = clip->getLengthBeats();
-        label = clip->getLabel();
-        patternId = clip->hasPattern() ? clip->getPatternId() : 0;
-        model.removeClip(clipId);
-        return true;
-    }
-    return false;
-}
-
-bool RemoveClipCommand::undo(ProjectModel& model)
-{
-    auto* clip = model.addClip(trackId, startBeats, lengthBeats, label);
-    if (clip != nullptr && patternId != 0)
-    {
-        model.linkClipToPattern(clip->getId(), patternId);
-        return true;
-    }
-    return clip != nullptr;
-}
+// Note: RemoveClipCommand implementation is in commands/RemoveClipCommand.cpp
 
 // ========== RenameTrackCommand ==========
 
