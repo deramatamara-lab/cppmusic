@@ -40,6 +40,7 @@ struct ColorPalette {
     juce::Colour accentPrimary{0xFFFFA726};      ///< FL-style orange accent
     juce::Colour accentSecondary{0xFF4ADE80};    ///< Neon green
     juce::Colour accentTertiary{0xFF00D4FF};     ///< Cyan
+    juce::Colour focus{0xFF00D4FF};              ///< Focus indicator (accessibility)
     
     // Status colors
     juce::Colour warning{0xFFFFB020};            ///< Warning yellow
@@ -54,6 +55,16 @@ struct ColorPalette {
     // Grid colors
     juce::Colour gridMain{0xFF2A2F3A};           ///< Main grid lines
     juce::Colour gridSubtle{0xFF1C2029};         ///< Subtle grid lines
+};
+
+/**
+ * @brief Font types for the DAW UI
+ */
+enum class FontType {
+    Body,       ///< Default UI text
+    Label,      ///< Slider labels, button text
+    Title,      ///< Section headers
+    Monospace   ///< Time readouts, diagnostic text
 };
 
 /**
@@ -117,6 +128,13 @@ public:
 
     void setColorPalette(const ColorPalette& palette);
     void setTypography(const Typography& typography);
+    
+    /**
+     * @brief Get font by type with optional size override
+     * @param type Font type
+     * @param size Optional size override (if 0, uses default for type)
+     */
+    juce::Font getFont(FontType type, float size = 0.0f) const;
 
     // =========================================================================
     // Typography Overrides

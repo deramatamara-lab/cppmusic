@@ -102,6 +102,32 @@ juce::Font CppMusicLookAndFeel::getPopupMenuFont() {
     return labelFont_;
 }
 
+juce::Font CppMusicLookAndFeel::getFont(FontType type, float size) const {
+    juce::Font font;
+    float defaultSize = typography_.size14;
+    
+    switch (type) {
+        case FontType::Body:
+            font = labelFont_;
+            defaultSize = typography_.size14;
+            break;
+        case FontType::Label:
+            font = buttonFont_;
+            defaultSize = typography_.size14;
+            break;
+        case FontType::Title:
+            font = labelFont_;
+            defaultSize = typography_.size18;
+            break;
+        case FontType::Monospace:
+            font = monoFont_;
+            defaultSize = typography_.size14;
+            break;
+    }
+    
+    return size > 0.0f ? font.withHeight(size) : font.withHeight(defaultSize);
+}
+
 // =========================================================================
 // Button Drawing
 // =========================================================================

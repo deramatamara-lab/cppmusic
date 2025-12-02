@@ -1,0 +1,87 @@
+{
+  "name": "CppMusic Pro Dark",
+  "version": "1.0.0",
+  "colors": {
+    "ui": {
+      "background": {
+        "primary": "#101015",
+        "secondary": "#161821",
+        "tertiary": "#1F222C"
+      },
+      "surface": {
+        "panel": "#1F222C",
+        "elevated": "#252833"
+      },
+      "text": {
+        "primary": "#E8ECF7",
+        "secondary": "#A2A8BC",
+        "muted": "#5A6070",
+        "disabled": "#5A6070"
+      },
+      "accent": {
+        "primary": "#FFA726",
+        "secondary": "#4ADE80",
+        "tertiary": "#00D4FF",
+        "warning": "#FFB020",
+        "success": "#22D39B",
+        "danger": "#FF4D4D"
+      },
+      "border": {
+        "subtle": "#2A2F3A",
+        "strong": "#303544"
+      },
+      "focus": "#00D4FF",
+      "grid": {
+        "main": "#2A2F3A",
+        "subtle": "#1C2029"
+      },
+      "meter": {
+        "ok": "#22D39B",
+        "hot": "#FFC857",
+        "clip": "#FF4D4D"
+      }
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter",
+    "fontFamilyMono": "JetBrains Mono",
+    "sizes": {
+      "xs": 10,
+      "sm": 12,
+      "md": 14,
+      "lg": 16,
+      "xl": 18,
+      "xxl": 24,
+      "xxxl": 32
+    }
+  },
+  "spacing": {
+    "xs": 2,
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "xxl": 24,
+    "xxxl": 32
+  },
+  "radius": {
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "xxl": 22
+  },
+  "animation": {
+    "duration": {
+      "fast": 100,
+      "normal": 200,
+      "slow": 300
+    },
+    "easing": {
+      "linear": "linear",
+      "easeIn": "easeIn",
+      "easeOut": "easeOut",
+      "easeInOut": "easeInOut"
+    }
+  }
+}

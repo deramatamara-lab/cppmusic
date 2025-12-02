@@ -75,6 +75,9 @@ endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/style/CMakeLists.txt")
     add_subdirectory(style)
 endif()
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/performance/CMakeLists.txt")
+    add_subdirectory(performance)
+endif()
 
 # Legacy compatibility alias
 add_library(ui_app ALIAS cppmusic_ui)
