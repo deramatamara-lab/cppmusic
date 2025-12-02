@@ -156,6 +156,14 @@ public:
     }
 
     /**
+     * @brief Set callback for note preview (clicking keys, drawing notes)
+     */
+    void setOnNotePreview(std::function<void(int note, float velocity)> callback)
+    {
+        onNotePreview_ = std::move(callback);
+    }
+
+    /**
      * @brief Set the current tool
      */
     void setCurrentTool(PianoRollTool tool) { currentTool_ = tool; }
@@ -258,6 +266,7 @@ private:
     bool tripletMode_{false};     // Enable triplet grid
 
     std::function<void(const NoteEvent&)> onNoteChanged_;
+    std::function<void(int note, float velocity)> onNotePreview_;
 
     // Drawing methods
     void drawToolbar(const Theme& theme);

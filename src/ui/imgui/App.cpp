@@ -192,6 +192,26 @@ bool App::initialize(const AppConfig& config)
         });
     }
 
+    // Wire piano roll note preview - play notes when drawn or keys clicked
+    if (pianoRollPanel_ && audioEngine_)
+    {
+        pianoRollPanel_->setOnNoteChanged([this](const NoteEvent& note) {
+            // Preview the note on channel 0 (or selected channel)
+            if (audioEngine_)
+            {
+                audioEngine_->noteOn(0, note.pitch, note.velocity);
+            }
+        });
+
+        pianoRollPanel_->setOnNotePreview([this](int note, float velocity) {
+            // Play note preview when clicking piano keys or drawing
+            if (audioEngine_)
+            {
+                audioEngine_->noteOn(0, note, velocity);
+            }
+        });
+    }
+
     // Load layout
     loadLayout();
 
