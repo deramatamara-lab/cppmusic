@@ -186,47 +186,82 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
 
 void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme& theme)
 {
-    const auto& tokens = theme.getTokens();
+    (void)theme;  // Using hardcoded FL-style colors
     float scale = theme.getDpiScale();
 
     ImGui::PushID(index);
 
-    // Channel header (name, mute, solo)
+    // FL-style channel row with LED indicator
     ImGui::BeginGroup();
 
-    // Mute button
-    ImVec4 muteColor = channel.muted ? ImVec4(0.8f, 0.3f, 0.3f, 1.0f) : tokens.button;
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 rowStart = ImGui::GetCursorScreenPos();
+
+    // LED indicator (FL-style colored dot)
+    float ledSize = 8.0f * scale;
+    float ledY = rowStart.y + 8.0f * scale;
+    ImVec4 ledColor = channel.muted ? ImVec4(0.3f, 0.3f, 0.3f, 1.0f) : channel.color;
+    drawList->AddCircleFilled(
+        ImVec2(rowStart.x + ledSize, ledY + ledSize / 2),
+        ledSize / 2,
+        ImGui::ColorConvertFloat4ToU32(ledColor)
+    );
+    ImGui::Dummy(ImVec2(ledSize * 2, 0));
+    ImGui::SameLine();
+
+    // Mute button - FL style (small, red when active)
+    ImVec4 muteColor = channel.muted ? ImVec4(0.7f, 0.2f, 0.2f, 1.0f) : ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
     ImGui::PushStyleColor(ImGuiCol_Button, muteColor);
-    if (ImGui::Button("M", ImVec2(24 * scale, 24 * scale)))
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f * scale);
+    if (ImGui::Button("M", ImVec2(20 * scale, 20 * scale)))
     {
         channel.muted = !channel.muted;
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mute");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mute (M)");
 
     ImGui::SameLine();
 
-    // Solo button
-    ImVec4 soloColor = channel.soloed ? ImVec4(0.9f, 0.8f, 0.2f, 1.0f) : tokens.button;
+    // Solo button - FL style (yellow/gold when active)
+    ImVec4 soloColor = channel.soloed ? ImVec4(0.85f, 0.75f, 0.1f, 1.0f) : ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
     ImGui::PushStyleColor(ImGuiCol_Button, soloColor);
-    if (ImGui::Button("S", ImVec2(24 * scale, 24 * scale)))
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f * scale);
+    if (ImGui::Button("S", ImVec2(20 * scale, 20 * scale)))
     {
         channel.soloed = !channel.soloed;
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor();
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Solo");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Solo (S)");
 
     ImGui::SameLine();
 
-    // Channel name button (FL-style)
-    ImGui::PushStyleColor(ImGuiCol_Button, channel.color);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(channel.color.x * 1.2f, channel.color.y * 1.2f, channel.color.z * 1.2f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(channel.color.x * 0.8f, channel.color.y * 0.8f, channel.color.z * 0.8f, 1.0f));
+    // Channel name button (FL-style with channel color as background)
+    ImVec4 nameButtonColor = ImVec4(
+        channel.color.x * 0.4f + 0.15f,
+        channel.color.y * 0.4f + 0.15f,
+        channel.color.z * 0.4f + 0.15f,
+        1.0f
+    );
+    ImGui::PushStyleColor(ImGuiCol_Button, nameButtonColor);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(nameButtonColor.x * 1.3f, nameButtonColor.y * 1.3f, nameButtonColor.z * 1.3f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, channel.color);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f * scale);
 
-    if (ImGui::Button(channel.name.c_str(), ImVec2(100.0f * scale, 24.0f * scale)))
+    // Selected channel gets a brighter background
+    if (index == selectedChannel_) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(nameButtonColor.x * 1.4f, nameButtonColor.y * 1.4f, nameButtonColor.z * 1.4f, 1.0f));
+    }
+
+    if (ImGui::Button(channel.name.c_str(), ImVec2(90.0f * scale, 22.0f * scale)))
     {
         selectedChannel_ = index;
         if (onChannelSelected_) onChannelSelected_(index);
+    }
+
+    if (index == selectedChannel_) {
+        ImGui::PopStyleColor();
     }
 
     // Double click to open plugin
@@ -249,6 +284,7 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
         ImGui::EndDragDropTarget();
     }
 
+    ImGui::PopStyleVar();
     ImGui::PopStyleColor(3);
 
     ImGui::SameLine();
@@ -256,12 +292,14 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
     // Step grid
     drawStepGrid(index, channel, theme);
 
-    // Channel params button
+    // Channel params button (gear icon style)
     ImGui::SameLine();
-    if (ImGui::Button("...", ImVec2(24 * scale, 24 * scale)))
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.32f, 1.0f));
+    if (ImGui::Button("...", ImVec2(22 * scale, 22 * scale)))
     {
         ImGui::OpenPopup("ChannelParams");
     }
+    ImGui::PopStyleColor();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Channel Parameters");
 
     // Channel params popup
@@ -305,80 +343,90 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
 
 void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, const Theme& theme)
 {
-    const auto& tokens = theme.getTokens();
+    (void)theme;  // Using hardcoded FL-style colors
     float scale = theme.getDpiScale();
 
-    float stepSize = 20.0f * scale;
-    float stepSpacing = 2.0f * scale;
+    float stepSize = 22.0f * scale;  // Slightly larger like FL
+    float stepSpacing = 1.0f * scale;
+    float groupSpacing = 6.0f * scale;  // Extra space between beat groups
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
 
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
-        float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
+        // Add extra spacing between groups of 4 (beat groups)
+        int group = i / 4;
+        float extraSpace = group * groupSpacing;
+
+        float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing) + extraSpace;
         float y = cursorPos.y;
 
-        // Highlight every 4th step (beat) - FL Studio style with alternating shade
-        bool isBeat = (i % 4 == 0);
-        bool isBar = (i % 16 == 0);
-        ImVec4 bgColor = isBar ? ImVec4(0.25f, 0.25f, 0.28f, 1.0f) :
-                         isBeat ? ImVec4(0.22f, 0.22f, 0.25f, 1.0f) :
-                                  tokens.frameBg;
+        // FL Studio style: different shades for beat groups
+        int beatInGroup = i % 4;
+        bool isFirstOfGroup = (beatInGroup == 0);
 
-        // Active step - FL orange
-        ImVec4 stepColor = channel.steps[static_cast<size_t>(i)] ?
-            ImVec4(0.95f, 0.55f, 0.15f, 1.0f) : bgColor;
+        // Background colors - FL style: darker for inactive, with group shading
+        ImVec4 bgColor;
+        if (group % 2 == 0) {
+            bgColor = isFirstOfGroup ? ImVec4(0.28f, 0.28f, 0.30f, 1.0f) : ImVec4(0.22f, 0.22f, 0.24f, 1.0f);
+        } else {
+            bgColor = isFirstOfGroup ? ImVec4(0.25f, 0.25f, 0.28f, 1.0f) : ImVec4(0.20f, 0.20f, 0.22f, 1.0f);
+        }
 
-        // Current playhead position - bright white outline
+        // Active step - FL Studio's characteristic orange-red gradient
+        ImVec4 stepColor;
+        if (channel.steps[static_cast<size_t>(i)]) {
+            float vel = channel.velocities[static_cast<size_t>(i)];
+            // FL-style: brighter orange-red for higher velocity
+            stepColor = ImVec4(0.95f, 0.40f + vel * 0.25f, 0.12f, 1.0f);
+        } else {
+            stepColor = bgColor;
+        }
+
+        // Current playhead position - bright highlight
         bool isCurrentStep = (i == currentStep_);
 
         ImU32 color = ImGui::ColorConvertFloat4ToU32(stepColor);
-        ImU32 borderColor = isCurrentStep ?
-            ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f)) :
-            ImGui::ColorConvertFloat4ToU32(tokens.border);
 
+        // Draw step button with rounded corners
         drawList->AddRectFilled(
             ImVec2(x, y),
             ImVec2(x + stepSize, y + stepSize),
             color,
-            tokens.radiusSm * scale
+            3.0f * scale  // Rounded corners
         );
 
-        // Playhead indicator - thicker border for current step
-        float borderThickness = isCurrentStep ? 2.0f : 1.0f;
-        drawList->AddRect(
-            ImVec2(x, y),
-            ImVec2(x + stepSize, y + stepSize),
-            borderColor,
-            tokens.radiusSm * scale,
-            0,
-            borderThickness
-        );
-
-        // Velocity indicator (height)
-        if (channel.steps[static_cast<size_t>(i)])
-        {
-            float velocity = channel.velocities[static_cast<size_t>(i)];
-            float velHeight = stepSize * velocity * 0.8f;
-            ImU32 velColor = ImGui::ColorConvertFloat4ToU32(tokens.meterGreen);
-            drawList->AddRectFilled(
-                ImVec2(x + 2, y + stepSize - velHeight - 2),
-                ImVec2(x + stepSize - 2, y + stepSize - 2),
-                velColor,
-                tokens.radiusSm * scale / 2
+        // Border - white glow for current step, subtle otherwise
+        if (isCurrentStep) {
+            // Playhead glow effect
+            ImU32 glowColor = ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 1.0f, 1.0f, 0.8f));
+            drawList->AddRect(
+                ImVec2(x - 1, y - 1),
+                ImVec2(x + stepSize + 1, y + stepSize + 1),
+                glowColor, 4.0f * scale, 0, 2.0f
+            );
+        } else if (channel.steps[static_cast<size_t>(i)]) {
+            // Subtle border on active steps
+            ImU32 borderColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.6f, 0.3f, 0.1f, 0.8f));
+            drawList->AddRect(
+                ImVec2(x, y),
+                ImVec2(x + stepSize, y + stepSize),
+                borderColor, 3.0f * scale, 0, 1.0f
             );
         }
     }
 
-    // Invisible buttons for interaction
+    // Invisible buttons for interaction - must match same positioning as drawing
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
-        float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
+        int group = i / 4;
+        float extraSpace = group * groupSpacing;
+        float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing) + extraSpace;
         float y = cursorPos.y;
 
         ImGui::SetCursorScreenPos(ImVec2(x, y));
-        ImGui::PushID(i); // Unique ID per step to avoid ID conflicts
+        ImGui::PushID(i);
         ImGui::InvisibleButton("##step", ImVec2(stepSize, stepSize));
 
         if (ImGui::IsItemClicked(0))
@@ -409,11 +457,12 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
                 }
             }
         }
-        ImGui::PopID(); // Restore previous ID
+        ImGui::PopID();
     }
 
     // Submit a dummy item to properly grow parent bounds
-    float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
+    int numGroups = (stepsPerPattern_ + 3) / 4;
+    float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing) + numGroups * groupSpacing;
     ImGui::Dummy(ImVec2(totalWidth, stepSize));
 }
 
