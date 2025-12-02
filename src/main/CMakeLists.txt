@@ -84,4 +84,7 @@ if(WIN32)
     )
 endif()
 
+# Alias target for cppmusic-daw (as per FL-style DAW UI specification)
+add_executable(cppmusic-daw ALIAS DAWProject)
+
 endif()
