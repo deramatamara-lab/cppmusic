@@ -6,6 +6,7 @@ set(UI_CORE_SOURCES
     AppState.cpp
     Commands.cpp
     PlaybackController.cpp
+    ProjectController.cpp
 )
 
 set(UI_CORE_HEADERS
@@ -15,6 +16,7 @@ set(UI_CORE_HEADERS
     AppState.hpp
     Commands.hpp
     PlaybackController.hpp
+    ProjectController.hpp
 )
 
 add_library(ui_core STATIC

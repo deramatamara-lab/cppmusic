@@ -57,11 +57,44 @@ The first fully functional JUCE-based UI implementing a pattern-oriented DAW wor
 - [x] Premium Look & Feel with dark theme
 
 ### Follow-up Tasks (After Phase 3)
+- [x] UI-Engine integration layer (PlaybackController, ProjectController)
+- [x] Built-in demo projects for quick-start experience
 - [ ] Topological sort & cycle detection in AudioGraph with UI feedback
 - [ ] Audio device abstraction & configuration UI
 - [ ] Visual refinement & micro-animations
 - [ ] Accessibility & keyboard-only navigation
 - [ ] Performance profiling & rendering optimization
+- [ ] Playlist playhead sync with timer-based position updates
+- [ ] Pattern playback from Channel Rack to audio engine
+- [ ] Mixer routing with fader/pan parameter wiring
+
+## Phase 3.5: Engine Integration (Current)
+
+**Status: In Progress**
+
+Advanced UI-engine integration building on Phase 3:
+
+- [x] PlaybackController for thread-safe transport control
+  - [x] Play/stop/loop/seek methods
+  - [x] Lock-free state snapshots
+  - [x] Listener interface for UI updates
+- [x] ProjectController for project model management
+  - [x] Pattern/track/clip helper methods
+  - [x] Active pattern tracking for piano roll
+  - [x] Change notification system
+- [x] Built-in demo projects (DemoProjects module)
+  - [x] Simple demo (4-channel drum + bass)
+  - [x] Advanced demo (8-channel multi-pattern)
+  - [x] Minimal demo for testing
+- [ ] Playlist playhead sync
+  - [ ] Timer-based position updates from PlaybackController
+  - [ ] Seek to beats on timeline click
+- [ ] Pattern playback integration
+  - [ ] Wire pattern events to audio engine
+  - [ ] Real-time note triggering from patterns
+- [ ] Mixer integration
+  - [ ] Fader/pan controls to engine parameters
+  - [ ] Meter display from engine
 
 ## Phase 4: Plugin & AI Integration
 
