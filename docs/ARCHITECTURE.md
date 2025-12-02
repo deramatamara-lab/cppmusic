@@ -674,4 +674,62 @@ project.dawproj/
 - `noexcept` on all audio thread functions
 - Graceful degradation on error (mute, bypass)
 
-This enhanced architecture represents a significant evolution of the CPPMusic DAW, incorporating cutting-edge audio processing, AI integration, professional animation systems, and comprehensive performance monitoring - making it truly "JAW DROPPING" in its capabilities and engineering excellence.
+## UI Design System
+
+### Design Token Architecture
+
+The UI uses a token-driven design system defined in `assets/theme/theme.json` and implemented in `src/ui/style/`:
+
+**Color System:**
+- `ui.background.{primary,secondary,tertiary}` - Background layers
+- `ui.surface.{panel,elevated}` - Panel backgrounds
+- `ui.text.{primary,secondary,muted,disabled}` - Text hierarchy
+- `ui.accent.{primary,secondary,tertiary}` - Accent colors
+- `ui.border.{subtle,strong}` - Border colors
+- `ui.focus` - Keyboard focus indicator (accessibility)
+- `ui.grid.{main,subtle}` - Grid line colors
+- `ui.meter.{ok,hot,clip}` - Audio meter colors
+
+**Typography System:**
+- `FontType::Body` - Default UI text (14pt)
+- `FontType::Label` - Slider labels, button text (14pt)
+- `FontType::Title` - Section headers (18pt)
+- `FontType::Monospace` - Time readouts, diagnostics (14pt)
+
+**Spacing & Radius:**
+- Spacing: `xs:2, sm:4, md:8, lg:12, xl:16, xxl:24, xxxl:32`
+- Radius: `sm:4, md:8, lg:12, xl:16, xxl:22`
+
+### UI Performance Guidelines
+
+**Paint Operations:**
+- No allocations in `paint()` - precompute in `resized()` or constructor
+- Cache complex gradients, paths, and Drawables as member variables
+- Use `repaint(x,y,w,h)` for partial invalidation, not full `repaint()`
+- Avoid expensive operations (trigonometry, sqrt) in paint loops
+
+**Animation Performance:**
+- Use shared animation timer (60 FPS) via `AnimationController`
+- No per-component timers - attach callbacks to shared timer
+- AnimatedValue uses inline interpolation with no allocations
+- Easing functions are constexpr where possible
+
+**Layout Performance:**
+- Cache layout calculations in member variables
+- Only recompute on resize or state change
+- Use dirty flags to avoid redundant calculations
+- Test at multiple DPI scales (100%, 150%, 200%)
+
+**Performance Monitoring:**
+- Use `UI_PERF_SCOPE(label)` in debug builds to track paint/layout timing
+- Call `UIPerformanceTracker::getInstance().printSummary()` to view metrics
+- Target: All paint operations < 16ms (60 FPS), ideally < 8ms
+- Monitor with: `UI_PERF_SCOPE("MyComponent::paint")`
+
+**HiDPI Support:**
+- All icons are vector-based (SVG) for crisp scaling
+- Use `IconManager` for centralized icon loading
+- Font sizes and spacing scale with global UI scale factor
+- Test at 1x, 1.5x, and 2x scaling
+
+This enhanced architecture represents a significant evolution of the CPPMusic DAW, incorporating cutting-edge audio processing, AI integration, professional animation systems, comprehensive performance monitoring, and a production-grade design system - making it truly "JAW DROPPING" in its capabilities and engineering excellence.

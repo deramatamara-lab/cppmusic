@@ -4,12 +4,14 @@ set(UI_ANIMATION_SOURCES
     ProfessionalAnimationEngine.cpp
     AdaptiveAnimationService.cpp
     AdaptiveAnimationManager.cpp
+    Animation.cpp
 )
 
 set(UI_ANIMATION_HEADERS
     ProfessionalAnimationEngine.h
     AdaptiveAnimationService.h
     AdaptiveAnimationManager.h
+    Animation.hpp
 )
 
 add_library(ui_animation STATIC

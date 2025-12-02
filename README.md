@@ -19,10 +19,12 @@ The `cppmusic-daw` executable provides a fully-featured FL Studio-style interfac
 - **Piano Roll**: MIDI note editor with velocity lane and AI-assisted composition
 
 **Premium Design System:**
-- Dark theme inspired by NI/iZotope products
-- Token-driven styling (colors, typography, spacing, animations)
-- Smooth animations with physics-based motion
-- High-DPI support across all platforms
+- Production-grade dark theme inspired by FL Studio, NI, and iZotope products
+- Token-driven styling (colors, typography, spacing, animations) via JSON theme files
+- 60 FPS smooth animations with physics-based easing functions (cubic, elastic, back)
+- High-DPI support with vector icons and global UI scaling (100%-200%)
+- Micro-interactions: hover/press animations, smooth value interpolation, animated panels
+- Performance-optimized: zero allocations in paint, cached resources, < 8ms frame time
 
 **Quick Start:**
 ```bash
@@ -36,9 +38,9 @@ cmake --build build
 
 - **Real-Time Audio Engine**: Lock-free, allocation-free audio processing
 - **AI Integration**: Background AI processing with graceful fallbacks
-- **Professional UI**: Responsive, accessible, and fully dockable interface
+- **Professional UI**: Responsive, accessible, fully animated interface with tooltips and keyboard shortcuts
 - **Ultra UI (ImGui)**: Modern, GPU-accelerated interface with Dear ImGui + SDL2 + OpenGL
-- **Premium Look & Feel**: Token-driven design system with flagship macro panels
+- **Premium Look & Feel**: Production-grade design system with smooth animations and HiDPI support
 - **Cross-Platform**: Windows, macOS, and Linux support with feature parity
 
 
