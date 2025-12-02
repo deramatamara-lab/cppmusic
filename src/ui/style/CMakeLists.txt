@@ -5,6 +5,8 @@ add_library(ui_style STATIC
     LookAndFeel.cpp
     IconManager.hpp
     IconManager.cpp
+    UIScaleManager.hpp
+    UIScaleManager.cpp
 )
 
 target_include_directories(ui_style PUBLIC
