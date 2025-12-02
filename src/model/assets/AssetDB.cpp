@@ -295,19 +295,19 @@ float AssetDB::computeSimilarity(const ai::tagging::FeatureSet& a,
     
     // Spectral centroid (normalized)
     float maxCentroid = 10000.0f;
-    distance += std::pow((a.spectralCentroid - b.spectralCentroid) / maxCentroid, 2) * 0.2f;
+    distance += static_cast<float>(std::pow((a.spectralCentroid - b.spectralCentroid) / maxCentroid, 2)) * 0.2f;
     
     // RMS energy
-    distance += std::pow(a.rmsEnergy - b.rmsEnergy, 2) * 0.1f;
+    distance += static_cast<float>(std::pow(a.rmsEnergy - b.rmsEnergy, 2)) * 0.1f;
     
     // Transient density (normalized)
     float maxTransient = 20.0f;
-    distance += std::pow((a.transientDensity - b.transientDensity) / maxTransient, 2) * 0.2f;
+    distance += static_cast<float>(std::pow((a.transientDensity - b.transientDensity) / maxTransient, 2)) * 0.2f;
     
     // MFCC similarity (simplified)
     float mfccDist = 0.0f;
     for (std::size_t i = 0; i < 13; ++i) {
-        mfccDist += std::pow(a.mfcc[i] - b.mfcc[i], 2);
+        mfccDist += static_cast<float>(std::pow(a.mfcc[i] - b.mfcc[i], 2));
     }
     distance += std::sqrt(mfccDist / 13.0f) * 0.5f;
     

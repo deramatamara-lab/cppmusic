@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -248,6 +249,15 @@ public:
         Cell* cell = &buffer_[pos & (Capacity - 1)];
         size_t seq = cell->sequence.load(std::memory_order_acquire);
         return static_cast<intptr_t>(seq) - static_cast<intptr_t>(pos + 1) < 0;
+    }
+    
+    /**
+     * @brief Get approximate size (not thread-safe, only for monitoring)
+     */
+    [[nodiscard]] size_t size() const {
+        size_t enq = enqueuePos_.load(std::memory_order_relaxed);
+        size_t deq = dequeuePos_.load(std::memory_order_relaxed);
+        return enq >= deq ? enq - deq : 0;
     }
     
 private:

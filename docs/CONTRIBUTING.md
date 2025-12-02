@@ -56,6 +56,37 @@ ctest --output-on-failure
 | `ENABLE_LTO` | Enable Link Time Optimization | OFF |
 | `ENABLE_JUCE` | Enable JUCE framework | ON |
 | `BUILD_MAIN_APP` | Build main application | ON |
+| `ENABLE_AI` | Enable AI-powered features | ON |
+| `ENABLE_GPU` | Enable GPU DSP offloading | OFF |
+
+### Building the DAW Application
+
+With JUCE enabled (default), the build produces the `cppmusic-daw` executable:
+
+```bash
+# Standard JUCE build (recommended)
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_JUCE=ON ..
+cmake --build .
+
+# Run the DAW application
+./src/main/DAWProject  # or cppmusic-daw alias
+```
+
+### Ubuntu/Linux JUCE Dependencies
+
+For the JUCE-based UI, install these additional packages:
+
+```bash
+sudo apt install -y \
+    libgl1-mesa-dev \
+    libxrandr-dev \
+    libxcursor-dev \
+    libxinerama-dev \
+    libxext-dev \
+    libasound2-dev \
+    libfreetype6-dev \
+    libcurl4-openssl-dev
+```
 
 ## Branching Strategy
 

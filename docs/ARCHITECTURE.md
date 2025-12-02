@@ -79,6 +79,40 @@ Core Layer (Math, Utilities, Logging, Job System)
 **Design System**: Centralized DesignSystem tokens (colors, typography, spacing). No magic numbers.  
 **Performance**: 60fps target, dirty-rect repainting, cached visuals, no allocations in paint().
 
+#### FL-Style DAW UI Architecture
+
+The UI implements a pattern-oriented DAW workflow inspired by FL Studio's channel rack/playlist/mixer paradigm:
+
+**Core UI Architecture (`src/ui/core/`):**
+- `AppState`: Central non-audio state management (view state, theme, zoom, snap settings)
+- `Commands`: Command IDs and keyboard mappings for transport, views, editing
+- `AnimationHelper`: Animation utilities for smooth UI transitions
+
+**Style/Look & Feel (`src/ui/style/`, `src/ui/lookandfeel/`):**
+- `CppMusicLookAndFeel`: Premium NI/iZotope-grade aesthetic
+- `UltraDesignSystem`: Token-driven design system (colors, typography, spacing)
+- Uniform rounding, shadows, and gradients for professional appearance
+
+**Main Views (`src/ui/views/`):**
+- `MainView`: Root layout manager with resizable panels
+- `TransportBar`: Play/stop/record, tempo, metronome, snap settings
+- `ArrangeView`: Playlist/timeline with tracks and pattern clips
+- `PianoRollView`: MIDI note editor with velocity lane
+- `MixerView`: Horizontal mixer strips with meters and faders
+- `BrowserPanel`: Collapsible browser with tabs (Project, Samples, Presets)
+
+**Components (`src/ui/components/`):**
+- `PatternSequencerPanel`: Channel rack / step sequencer
+- `SessionLauncherView`: Session view for clip launching
+- `DrumMachine`: Drum pattern programming
+- `StatusStrip`: Project name, CPU meter, status indicators
+
+**UI/Engine Boundary:**
+- UI interacts with engine/model via thread-safe controller objects
+- State changes dispatched via lock-free message queues
+- Transport controls map to engine Transport methods
+- Playhead position updated via timer callbacks
+
 ### AI Module (`daw::ai`)
 **Location**: `src/ai/`  
 **Purpose**: AI model integration and inference.  

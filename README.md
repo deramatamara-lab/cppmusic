@@ -6,6 +6,32 @@ A professional-grade Digital Audio Workstation built with JUCE, featuring AI-pow
 
 This project implements a zero-glitch, zero-crash DAW that prioritizes real-time audio performance, professional UX, and cross-platform consistency. The codebase follows strict development rules to ensure audio correctness, thread safety, and maintainability.
 
+## Graphical DAW Application
+
+The `cppmusic-daw` executable provides a fully-featured FL Studio-style interface:
+
+**FL-Style Workspace Layout:**
+- **Top Transport Bar**: Play/stop/record, tempo control, metronome, snap settings
+- **Left Browser Panel**: Collapsible file browser with tabs (Project, Samples, Presets)
+- **Center Playlist**: Arrangement timeline with tracks and pattern clips
+- **Bottom Channel Rack**: Step sequencer with pattern management
+- **Mixer Panel**: Dockable mixer with peak/RMS meters, faders, and pan controls
+- **Piano Roll**: MIDI note editor with velocity lane and AI-assisted composition
+
+**Premium Design System:**
+- Dark theme inspired by NI/iZotope products
+- Token-driven styling (colors, typography, spacing, animations)
+- Smooth animations with physics-based motion
+- High-DPI support across all platforms
+
+**Quick Start:**
+```bash
+# Build and run
+cmake -B build -DENABLE_JUCE=ON
+cmake --build build
+./build/src/main/DAWProject
+```
+
 ## Key Features
 
 - **Real-Time Audio Engine**: Lock-free, allocation-free audio processing

@@ -3,12 +3,16 @@
 set(UI_CORE_SOURCES
     ModernUIComponent.cpp
     AnimationHelper.cpp
+    AppState.cpp
+    Commands.cpp
 )
 
 set(UI_CORE_HEADERS
     ModernUIComponent.h
     PhysicsAnimation.h
     AnimationHelper.h
+    AppState.hpp
+    Commands.hpp
 )
 
 add_library(ui_core STATIC
