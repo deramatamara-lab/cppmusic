@@ -32,5 +32,4 @@ if(GTest_FOUND)
     cppmusic_add_warning_flags(TestAutomationLayers)
     cppmusic_add_sanitizer_flags(TestAutomationLayers)
     add_test(NAME AutomationLayersTest COMMAND TestAutomationLayers)
-
-.
+endif()
