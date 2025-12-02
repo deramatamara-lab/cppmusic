@@ -24,10 +24,25 @@ void CppMusicLookAndFeel::setTypography(const Typography& typography) {
 }
 
 void CppMusicLookAndFeel::updateFonts() {
-    labelFont_ = juce::Font(typography_.fontFamily, typography_.size14, juce::Font::plain);
-    buttonFont_ = juce::Font(typography_.fontFamily, typography_.size14, juce::Font::plain);
-    comboFont_ = juce::Font(typography_.fontFamily, typography_.size14, juce::Font::plain);
-    monoFont_ = juce::Font(typography_.fontFamilyMono, typography_.size14, juce::Font::plain);
+    // Use system default fonts as fallbacks if custom fonts aren't available
+    auto sansSerifFamily = typography_.fontFamily;
+    auto monoFamily = typography_.fontFamilyMono;
+    
+    // Check if custom font is available, fall back to system defaults
+    juce::Font testFont(sansSerifFamily, 12.0f, juce::Font::plain);
+    if (testFont.getTypefaceName() != sansSerifFamily) {
+        sansSerifFamily = juce::Font::getDefaultSansSerifFontName();
+    }
+    
+    juce::Font testMonoFont(monoFamily, 12.0f, juce::Font::plain);
+    if (testMonoFont.getTypefaceName() != monoFamily) {
+        monoFamily = juce::Font::getDefaultMonospacedFontName();
+    }
+    
+    labelFont_ = juce::Font(sansSerifFamily, typography_.size14, juce::Font::plain);
+    buttonFont_ = juce::Font(sansSerifFamily, typography_.size14, juce::Font::plain);
+    comboFont_ = juce::Font(sansSerifFamily, typography_.size14, juce::Font::plain);
+    monoFont_ = juce::Font(monoFamily, typography_.size14, juce::Font::plain);
 }
 
 void CppMusicLookAndFeel::applyColorsToLookAndFeel() {

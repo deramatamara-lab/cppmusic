@@ -103,13 +103,16 @@ public:
 
     /**
      * @brief Add a listener for state changes
-     * @param listener Pointer to listener (must outlive registration)
+     * @param listener Pointer to listener (must outlive registration or call removeListener in destructor)
+     * @note Listeners should call removeListener() before destruction to prevent use-after-free.
+     *       Consider using RAII wrappers (e.g., juce::Component which already removes itself on destruction).
      */
     void addListener(AppStateListener* listener);
 
     /**
      * @brief Remove a listener
      * @param listener Pointer to listener to remove
+     * @note Safe to call multiple times or with nullptr
      */
     void removeListener(AppStateListener* listener);
 
