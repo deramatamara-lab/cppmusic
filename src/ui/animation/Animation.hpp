@@ -183,6 +183,7 @@ private:
 class AnimationController : public juce::Timer {
 public:
     AnimationController() : lastTime_(juce::Time::getMillisecondCounterHiRes()) {
+        callbacks_.ensureStorageAllocated(16); // Pre-allocate to avoid reallocation
         startTimerHz(60); // 60 FPS
     }
     
@@ -194,14 +195,14 @@ public:
      * @brief Register a callback for animation updates
      */
     void addUpdateCallback(std::function<void(float)> callback) {
-        callbacks_.push_back(std::move(callback));
+        callbacks_.add(std::move(callback));
     }
     
     /**
      * @brief Clear all callbacks
      */
     void clearCallbacks() {
-        callbacks_.clear();
+        callbacks_.clearQuick();
     }
     
 private:
@@ -216,7 +217,7 @@ private:
     }
     
     double lastTime_;
-    std::vector<std::function<void(float)>> callbacks_;
+    juce::Array<std::function<void(float)>> callbacks_;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AnimationController)
 };

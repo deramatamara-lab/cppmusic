@@ -112,16 +112,23 @@ class ScopedScaledGraphics {
 public:
     ScopedScaledGraphics(juce::Graphics& g, float scale)
         : graphics_(g)
+        , scale_(scale)
     {
-        if (scale != 1.0f) {
-            graphics_.addTransform(juce::AffineTransform::scale(scale));
+        if (scale_ != 1.0f) {
+            graphics_.saveState();
+            graphics_.addTransform(juce::AffineTransform::scale(scale_));
         }
     }
     
-    ~ScopedScaledGraphics() = default;
+    ~ScopedScaledGraphics() {
+        if (scale_ != 1.0f) {
+            graphics_.restoreState();
+        }
+    }
     
 private:
     juce::Graphics& graphics_;
+    float scale_;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ScopedScaledGraphics)
 };

@@ -35,7 +35,7 @@ void UIPerformanceTracker::reset() {
 void UIPerformanceTracker::printSummary() const {
     juce::ScopedLock sl(lock_);
     
-    if (metrics_.empty()) {
+    if (metrics_.size() == 0) {
         DBG("UI Performance: No metrics recorded");
         return;
     }
@@ -44,7 +44,10 @@ void UIPerformanceTracker::printSummary() const {
     DBG("Label                              Count    Min(ms)  Avg(ms)  Max(ms)");
     DBG("-----------------------------------------------------------------------");
     
-    for (const auto& [label, metrics] : metrics_) {
+    for (auto it = metrics_.begin(); it != metrics_.end(); ++it) {
+        const auto& label = it.getKey();
+        const auto& metrics = it.getValue();
+        
         juce::String line = juce::String(label).paddedRight(' ', 35);
         line += juce::String(metrics.count).paddedLeft(' ', 7);
         line += juce::String(metrics.minMs, 2).paddedLeft(' ', 10);

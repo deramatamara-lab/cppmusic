@@ -110,7 +110,12 @@ std::unique_ptr<juce::Drawable> IconManager::getIcon(IconType type, float size, 
     
     // Fallback to built-in SVG
     auto svgData = getSVGData(type);
-    auto drawable = juce::Drawable::createFromSVG(*juce::parseXML(svgData));
+    auto xml = juce::parseXML(svgData);
+    if (xml == nullptr) {
+        return nullptr;
+    }
+    
+    auto drawable = juce::Drawable::createFromSVG(*xml);
     if (drawable != nullptr) {
         drawable->replaceColour(juce::Colours::black, color);
         drawable->setTransformToFit(juce::Rectangle<float>(0, 0, size, size),

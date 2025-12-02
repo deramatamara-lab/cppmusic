@@ -58,6 +58,10 @@ public:
         
         setBounds(x, y, width, height);
         
+        // Add to desktop first for proper positioning
+        addToDesktop(juce::ComponentPeer::windowIsTemporary |
+                    juce::ComponentPeer::windowIgnoresKeyPresses);
+        
         // Fade in
         opacity_.setTarget(1.0f, 150, animation::Easing::easeOutCubic);
         startAnimation([this](float delta) {
@@ -69,8 +73,6 @@ public:
         });
         
         setVisible(true);
-        addToDesktop(juce::ComponentPeer::windowIsTemporary |
-                    juce::ComponentPeer::windowIgnoresKeyPresses);
         
         // Auto-hide after 5 seconds
         startTimer(5000);

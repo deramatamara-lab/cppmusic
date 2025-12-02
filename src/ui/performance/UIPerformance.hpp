@@ -69,7 +69,7 @@ public:
     /**
      * @brief Get all metrics
      */
-    const std::unordered_map<juce::String, PerfMetrics>& getAllMetrics() const {
+    const juce::HashMap<juce::String, PerfMetrics>& getAllMetrics() const {
         return metrics_;
     }
     
@@ -90,7 +90,7 @@ private:
     UIPerformanceTracker& operator=(const UIPerformanceTracker&) = delete;
     
     bool enabled_{false};
-    std::unordered_map<juce::String, PerfMetrics> metrics_;
+    juce::HashMap<juce::String, PerfMetrics> metrics_;
     mutable juce::CriticalSection lock_;
 };
 
