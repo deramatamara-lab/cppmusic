@@ -6,7 +6,7 @@ find_package(GTest QUIET)
 
 if(GTest_FOUND)
     message(STATUS "Google Test found - building unit tests")
-    
+
     # Pattern unit test (original)
     add_executable(TestPattern
         TestPattern.cpp
@@ -32,5 +32,4 @@ if(GTest_FOUND)
     cppmusic_add_warning_flags(TestAutomationLayers)
     cppmusic_add_sanitizer_flags(TestAutomationLayers)
     add_test(NAME AutomationLayersTest COMMAND TestAutomationLayers)
-
-.
+endif()

@@ -18,7 +18,7 @@ void ChannelRackPanel::createDemoChannels()
     addChannel("Snare");
     addChannel("Hi-Hat");
     addChannel("Bass");
-    
+
     // Set some demo patterns
     if (channels_.size() >= 4)
     {
@@ -27,19 +27,19 @@ void ChannelRackPanel::createDemoChannels()
         channels_[0].steps[4] = true;
         channels_[0].steps[8] = true;
         channels_[0].steps[12] = true;
-        
+
         // Snare on 5, 13 with probability
         channels_[1].steps[4] = true;
         channels_[1].steps[12] = true;
         channels_[1].probabilities[4] = 0.9f;  // 90% probability
-        
+
         // Hi-hat on all with varying velocity
         for (int i = 0; i < stepsPerPattern_; i += 2)
         {
             channels_[2].steps[static_cast<size_t>(i)] = true;
             channels_[2].velocities[static_cast<size_t>(i)] = (i % 4 == 0) ? 1.0f : 0.6f;
         }
-        
+
         // Bass pattern with micro-timing
         channels_[3].steps[0] = true;
         channels_[3].steps[3] = true;
@@ -50,10 +50,11 @@ void ChannelRackPanel::createDemoChannels()
     }
 }
 
-void ChannelRackPanel::addChannel(const std::string& name)
+void ChannelRackPanel::addChannel(const std::string& name, ChannelType type)
 {
     ChannelState channel;
     channel.name = name;
+    channel.type = type;
     channel.steps.resize(static_cast<size_t>(stepsPerPattern_), false);
     channel.velocities.resize(static_cast<size_t>(stepsPerPattern_), 0.8f);
     channel.probabilities.resize(static_cast<size_t>(stepsPerPattern_), 1.0f);
@@ -80,12 +81,12 @@ void ChannelRackPanel::setStepsPerPattern(int steps)
 void ChannelRackPanel::draw(bool& open, const Theme& theme)
 {
     if (!open) return;
-    
+
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(tokens.spacingSm * scale, tokens.spacingSm * scale));
-    
+
     if (ImGui::Begin("Channel Rack", &open, ImGuiWindowFlags_MenuBar))
     {
         // Menu bar
@@ -105,7 +106,7 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
                 if (ImGui::MenuItem("Generate Roll...")) { /* TODO */ }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Fill Pattern")) { /* TODO */ }
-                if (ImGui::MenuItem("Clear Pattern")) 
+                if (ImGui::MenuItem("Clear Pattern"))
                 {
                     for (auto& channel : channels_)
                     {
@@ -116,14 +117,14 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
             }
             ImGui::EndMenuBar();
         }
-        
+
         // Toolbar
         if (ImGui::Button(isDrawMode_ ? "Draw Mode" : "Select Mode"))
         {
             isDrawMode_ = !isDrawMode_;
         }
         ImGui::SameLine();
-        
+
         // Lane toggles
         ImGui::Checkbox("Velocity", &showVelocityLane_);
         ImGui::SameLine();
@@ -131,7 +132,7 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
         ImGui::SameLine();
         ImGui::Checkbox("Cond", &showConditionLane_);
         ImGui::SameLine();
-        
+
         // Pattern swing control
         ImGui::SameLine();
         ImGui::Separator();
@@ -141,17 +142,17 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
         ImGui::SetNextItemWidth(100 * scale);
         ImGui::SliderFloat("##PatSwing", &patternSwing_, -1.0f, 1.0f, "%.2f");
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pattern-level swing");
-        
+
         ImGui::SameLine();
-        
+
         if (ImGui::Button("+"))
         {
             addChannel();
         }
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Add Channel");
-        
+
         ImGui::Separator();
-        
+
         // Channel list
         if (ImGui::BeginChild("##ChannelList", ImVec2(0, 0), false))
         {
@@ -163,7 +164,7 @@ void ChannelRackPanel::draw(bool& open, const Theme& theme)
         ImGui::EndChild();
     }
     ImGui::End();
-    
+
     ImGui::PopStyleVar();
 }
 
@@ -171,12 +172,12 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     ImGui::PushID(index);
-    
+
     // Channel header (name, mute, solo)
     ImGui::BeginGroup();
-    
+
     // Mute button
     ImVec4 muteColor = channel.muted ? ImVec4(0.8f, 0.3f, 0.3f, 1.0f) : tokens.button;
     ImGui::PushStyleColor(ImGuiCol_Button, muteColor);
@@ -186,9 +187,9 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
     }
     ImGui::PopStyleColor();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Mute");
-    
+
     ImGui::SameLine();
-    
+
     // Solo button
     ImVec4 soloColor = channel.soloed ? ImVec4(0.9f, 0.8f, 0.2f, 1.0f) : tokens.button;
     ImGui::PushStyleColor(ImGuiCol_Button, soloColor);
@@ -198,9 +199,9 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
     }
     ImGui::PopStyleColor();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Solo");
-    
+
     ImGui::SameLine();
-    
+
     // Channel name
     ImGui::SetNextItemWidth(80.0f * scale);
     char nameBuf[64];
@@ -209,12 +210,12 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
     {
         channel.name = nameBuf;
     }
-    
+
     ImGui::SameLine();
-    
+
     // Step grid
     drawStepGrid(index, channel, theme);
-    
+
     // Channel params button
     ImGui::SameLine();
     if (ImGui::Button("...", ImVec2(24 * scale, 24 * scale)))
@@ -222,35 +223,35 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
         ImGui::OpenPopup("ChannelParams");
     }
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Channel Parameters");
-    
+
     // Channel params popup
     if (ImGui::BeginPopup("ChannelParams"))
     {
         drawChannelParams(index, channel, theme);
         ImGui::EndPopup();
     }
-    
+
     ImGui::EndGroup();
-    
+
     // Additional lanes (when channel is selected)
     if (index == selectedChannel_)
     {
         float indent = 110.0f * scale;
-        
+
         if (showVelocityLane_)
         {
             ImGui::Indent(indent);
             drawVelocityLane(index, channel, theme);
             ImGui::Unindent(indent);
         }
-        
+
         if (showProbabilityLane_)
         {
             ImGui::Indent(indent);
             drawProbabilityLane(index, channel, theme);
             ImGui::Unindent(indent);
         }
-        
+
         if (showConditionLane_)
         {
             ImGui::Indent(indent);
@@ -258,7 +259,7 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
             ImGui::Unindent(indent);
         }
     }
-    
+
     ImGui::PopID();
 }
 
@@ -266,24 +267,24 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     float stepSize = 20.0f * scale;
     float stepSpacing = 2.0f * scale;
-    
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    
+
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         float y = cursorPos.y;
-        
+
         // Highlight every 4th step (beat)
         ImVec4 bgColor = (i % 4 == 0) ? tokens.frameBgHovered : tokens.frameBg;
-        
+
         // Active step
         ImVec4 stepColor = channel.steps[static_cast<size_t>(i)] ? tokens.noteOn : bgColor;
-        
+
         // Current playhead position
         if (i == currentStep_)
         {
@@ -294,24 +295,24 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
                 stepColor.w
             );
         }
-        
+
         ImU32 color = ImGui::ColorConvertFloat4ToU32(stepColor);
         ImU32 borderColor = ImGui::ColorConvertFloat4ToU32(tokens.border);
-        
+
         drawList->AddRectFilled(
             ImVec2(x, y),
             ImVec2(x + stepSize, y + stepSize),
             color,
             tokens.radiusSm * scale
         );
-        
+
         drawList->AddRect(
             ImVec2(x, y),
             ImVec2(x + stepSize, y + stepSize),
             borderColor,
             tokens.radiusSm * scale
         );
-        
+
         // Velocity indicator (height)
         if (channel.steps[static_cast<size_t>(i)])
         {
@@ -326,16 +327,16 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
             );
         }
     }
-    
+
     // Invisible buttons for interaction
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         float y = cursorPos.y;
-        
+
         ImGui::SetCursorScreenPos(ImVec2(x, y));
         ImGui::InvisibleButton("##step", ImVec2(stepSize, stepSize));
-        
+
         if (ImGui::IsItemClicked(0))
         {
             if (isDrawMode_)
@@ -351,7 +352,7 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
                 selectedChannel_ = channelIndex;
             }
         }
-        
+
         // Draw on drag
         if (isDrawMode_ && ImGui::IsItemHovered() && ImGui::IsMouseDown(0))
         {
@@ -365,7 +366,7 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
             }
         }
     }
-    
+
     // Submit a dummy item to properly grow parent bounds
     float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
     ImGui::Dummy(ImVec2(totalWidth, stepSize));
@@ -375,14 +376,14 @@ void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& chan
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     float stepSize = 20.0f * scale;
     float stepSpacing = 2.0f * scale;
     float laneHeight = 40.0f * scale;
-    
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    
+
     // Background
     ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(tokens.frameBg);
     drawList->AddRectFilled(
@@ -390,20 +391,20 @@ void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& chan
         ImVec2(cursorPos.x + static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing), cursorPos.y + laneHeight),
         bgColor
     );
-    
+
     // Velocity bars
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         float velocity = channel.velocities[static_cast<size_t>(i)];
         float barHeight = velocity * (laneHeight - 4);
-        
+
         ImVec4 barColor = (velocity > 0.8f) ? tokens.meterRed :
                           (velocity > 0.5f) ? tokens.meterYellow : tokens.meterGreen;
         ImU32 color = ImGui::ColorConvertFloat4ToU32(barColor);
-        
+
         drawList->AddRectFilled(
             ImVec2(x + 2, cursorPos.y + laneHeight - barHeight - 2),
             ImVec2(x + stepSize - 2, cursorPos.y + laneHeight - 2),
@@ -411,16 +412,16 @@ void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& chan
             tokens.radiusSm * scale / 2
         );
     }
-    
+
     // Interaction
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         ImGui::SetCursorScreenPos(ImVec2(x, cursorPos.y));
         ImGui::InvisibleButton("##vel", ImVec2(stepSize, laneHeight));
-        
+
         if (ImGui::IsItemActive())
         {
             float mouseY = ImGui::GetIO().MousePos.y;
@@ -428,7 +429,7 @@ void ChannelRackPanel::drawVelocityLane(int /*channelIndex*/, ChannelState& chan
             channel.velocities[static_cast<size_t>(i)] = std::clamp(relY, 0.0f, 1.0f);
         }
     }
-    
+
     // Submit a dummy item to properly grow parent bounds
     float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
     ImGui::Dummy(ImVec2(totalWidth, laneHeight));
@@ -438,14 +439,14 @@ void ChannelRackPanel::drawProbabilityLane(int /*channelIndex*/, ChannelState& c
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     float stepSize = 20.0f * scale;
     float stepSpacing = 2.0f * scale;
     float laneHeight = 30.0f * scale;
-    
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    
+
     // Background
     ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(tokens.frameBg);
     drawList->AddRectFilled(
@@ -453,22 +454,22 @@ void ChannelRackPanel::drawProbabilityLane(int /*channelIndex*/, ChannelState& c
         ImVec2(cursorPos.x + static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing), cursorPos.y + laneHeight),
         bgColor
     );
-    
+
     // Probability indicators (diamonds)
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing) + stepSize / 2;
         float y = cursorPos.y + laneHeight / 2;
         float prob = channel.probabilities[static_cast<size_t>(i)];
         float size = 6.0f * scale * prob;
-        
+
         // Color based on probability
         ImVec4 probColor = prob > 0.8f ? tokens.meterGreen :
                            prob > 0.4f ? tokens.meterYellow : tokens.meterRed;
         ImU32 color = ImGui::ColorConvertFloat4ToU32(probColor);
-        
+
         // Diamond shape
         ImVec2 points[4] = {
             ImVec2(x, y - size),
@@ -478,30 +479,30 @@ void ChannelRackPanel::drawProbabilityLane(int /*channelIndex*/, ChannelState& c
         };
         drawList->AddConvexPolyFilled(points, 4, color);
     }
-    
+
     // Interaction - click to toggle probability presets
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         ImGui::SetCursorScreenPos(ImVec2(x, cursorPos.y));
         ImGui::InvisibleButton("##prob", ImVec2(stepSize, laneHeight));
-        
+
         if (ImGui::IsItemActive())
         {
             float mouseY = ImGui::GetIO().MousePos.y;
             float relY = 1.0f - (mouseY - cursorPos.y) / laneHeight;
             channel.probabilities[static_cast<size_t>(i)] = std::clamp(relY, 0.0f, 1.0f);
         }
-        
+
         // Right-click for probability presets
         if (ImGui::IsItemClicked(1))
         {
             ImGui::OpenPopup("ProbPresets");
         }
     }
-    
+
     // Probability presets popup
     if (ImGui::BeginPopup("ProbPresets"))
     {
@@ -511,7 +512,7 @@ void ChannelRackPanel::drawProbabilityLane(int /*channelIndex*/, ChannelState& c
         if (ImGui::MenuItem("25%")) { /* set focused step to 0.25 */ }
         ImGui::EndPopup();
     }
-    
+
     float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
     ImGui::Dummy(ImVec2(totalWidth, laneHeight));
 }
@@ -520,14 +521,14 @@ void ChannelRackPanel::drawConditionIndicators(int /*channelIndex*/, ChannelStat
 {
     const auto& tokens = theme.getTokens();
     float scale = theme.getDpiScale();
-    
+
     float stepSize = 20.0f * scale;
     float stepSpacing = 2.0f * scale;
     float laneHeight = 20.0f * scale;
-    
+
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    
+
     // Background
     ImU32 bgColor = ImGui::ColorConvertFloat4ToU32(tokens.frameBg);
     drawList->AddRectFilled(
@@ -535,19 +536,19 @@ void ChannelRackPanel::drawConditionIndicators(int /*channelIndex*/, ChannelStat
         ImVec2(cursorPos.x + static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing), cursorPos.y + laneHeight),
         bgColor
     );
-    
+
     // Condition labels
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         StepCondition cond = channel.conditions[static_cast<size_t>(i)];
         int param = channel.conditionParams[static_cast<size_t>(i)];
-        
+
         char label[8] = "";
         ImVec4 labelColor = tokens.text;
-        
+
         switch (cond)
         {
             case StepCondition::Always:
@@ -572,24 +573,32 @@ void ChannelRackPanel::drawConditionIndicators(int /*channelIndex*/, ChannelStat
                 std::snprintf(label, sizeof(label), "?");
                 labelColor = ImVec4(0.8f, 0.5f, 0.8f, 1.0f);
                 break;
+            case StepCondition::Fill:
+                std::snprintf(label, sizeof(label), "F");
+                labelColor = ImVec4(0.3f, 0.9f, 0.6f, 1.0f);
+                break;
+            case StepCondition::NotFill:
+                std::snprintf(label, sizeof(label), "!F");
+                labelColor = ImVec4(0.9f, 0.4f, 0.4f, 1.0f);
+                break;
         }
-        
+
         if (label[0] != '\0')
         {
             ImU32 color = ImGui::ColorConvertFloat4ToU32(labelColor);
             drawList->AddText(ImVec2(x + 2, cursorPos.y + 2), color, label);
         }
     }
-    
+
     // Interaction - click to cycle conditions
     for (int i = 0; i < stepsPerPattern_; ++i)
     {
         if (!channel.steps[static_cast<size_t>(i)]) continue;
-        
+
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         ImGui::SetCursorScreenPos(ImVec2(x, cursorPos.y));
         ImGui::InvisibleButton("##cond", ImVec2(stepSize, laneHeight));
-        
+
         if (ImGui::IsItemClicked(0))
         {
             // Cycle through conditions
@@ -597,14 +606,14 @@ void ChannelRackPanel::drawConditionIndicators(int /*channelIndex*/, ChannelStat
             condVal = (condVal + 1) % 6;
             channel.conditions[static_cast<size_t>(i)] = static_cast<StepCondition>(condVal);
         }
-        
+
         // Right-click for condition parameter
         if (ImGui::IsItemClicked(1))
         {
             ImGui::OpenPopup("CondParam");
         }
     }
-    
+
     float totalWidth = static_cast<float>(stepsPerPattern_) * (stepSize + stepSpacing);
     ImGui::Dummy(ImVec2(totalWidth, laneHeight));
 }
@@ -613,37 +622,37 @@ void ChannelRackPanel::drawChannelParams(int /*channelIndex*/, ChannelState& cha
 {
     float scale = theme.getDpiScale();
     (void)scale; // May use later
-    
+
     ImGui::Text("Channel Parameters");
     ImGui::Separator();
-    
+
     // Transpose
     ImGui::SetNextItemWidth(100);
     ImGui::SliderInt("Transpose", &channel.transpose, -24, 24);
-    
+
     // Sample start offset
     ImGui::SetNextItemWidth(100);
     ImGui::SliderFloat("Sample Start", &channel.sampleStartOffset, 0.0f, 1.0f);
-    
+
     // Reverse
     ImGui::Checkbox("Reverse", &channel.reverse);
-    
+
     // Retrigger rate
     ImGui::SetNextItemWidth(100);
     ImGui::SliderFloat("Retrigger", &channel.retriggerRate, 0.0f, 1.0f);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Retrigger rate (0 = off)");
-    
+
     // Channel swing
     ImGui::SetNextItemWidth(100);
     ImGui::SliderFloat("Channel Swing", &channel.channelSwing, -1.0f, 1.0f);
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("Per-channel swing override");
-    
+
     ImGui::Separator();
-    
+
     // Volume and Pan
     ImGui::SetNextItemWidth(100);
     ImGui::SliderFloat("Volume", &channel.volume, 0.0f, 1.0f);
-    
+
     ImGui::SetNextItemWidth(100);
     ImGui::SliderFloat("Pan", &channel.pan, 0.0f, 1.0f);
 }
@@ -652,19 +661,19 @@ void ChannelRackPanel::generateFlam(int channelIndex, int step, int flamCount, f
 {
     if (channelIndex < 0 || channelIndex >= static_cast<int>(channels_.size())) return;
     if (step < 0 || step >= stepsPerPattern_) return;
-    
+
     auto& channel = channels_[static_cast<size_t>(channelIndex)];
-    
+
     // Generate flam sub-hits with decreasing velocity
     for (int i = 0; i < flamCount; ++i)
     {
         int targetStep = step + i;
         if (targetStep >= stepsPerPattern_) break;
-        
+
         channel.steps[static_cast<size_t>(targetStep)] = true;
-        channel.velocities[static_cast<size_t>(targetStep)] = 
+        channel.velocities[static_cast<size_t>(targetStep)] =
             1.0f - (static_cast<float>(i) / static_cast<float>(flamCount)) * 0.5f;
-        channel.microTimingOffsets[static_cast<size_t>(targetStep)] = 
+        channel.microTimingOffsets[static_cast<size_t>(targetStep)] =
             static_cast<int>(static_cast<float>(i) * flamSpacing * 100.0f);
     }
 }
@@ -673,9 +682,9 @@ void ChannelRackPanel::generateRoll(int channelIndex, int startStep, int endStep
 {
     if (channelIndex < 0 || channelIndex >= static_cast<int>(channels_.size())) return;
     if (startStep < 0 || endStep >= stepsPerPattern_ || startStep >= endStep) return;
-    
+
     auto& channel = channels_[static_cast<size_t>(channelIndex)];
-    
+
     // Generate roll by filling steps with subdivisions
     // This would ideally create sub-tick events, but for step sequencer
     // we fill in the visible steps
@@ -683,10 +692,10 @@ void ChannelRackPanel::generateRoll(int channelIndex, int startStep, int endStep
     {
         channel.steps[static_cast<size_t>(step)] = true;
         // Alternate velocity for roll effect
-        channel.velocities[static_cast<size_t>(step)] = 
+        channel.velocities[static_cast<size_t>(step)] =
             (step % 2 == 0) ? 0.9f : 0.7f;
     }
-    
+
     (void)divisions; // Would use for sub-tick resolution
 }
 

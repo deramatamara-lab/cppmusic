@@ -92,6 +92,7 @@ set(IMGUI_UI_SOURCES
     panels/PlaylistPanel.cpp
     panels/MixerPanel.cpp
     panels/InspectorPanel.cpp
+    panels/PluginWindow.cpp
 )
 
 set(IMGUI_UI_HEADERS
@@ -105,6 +106,7 @@ set(IMGUI_UI_HEADERS
     panels/PlaylistPanel.hpp
     panels/MixerPanel.hpp
     panels/InspectorPanel.hpp
+    panels/PluginWindow.hpp
 )
 
 add_library(cppmusic_imgui_ui STATIC
@@ -130,9 +132,9 @@ target_link_libraries(cppmusic_imgui_ui PUBLIC
 #   uses many implicit conversions in its API that would require verbose casts.
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Third-party ImGui code - disable all strict warnings
-    target_compile_options(imgui_backend PRIVATE 
-        -Wno-conversion 
-        -Wno-sign-conversion 
+    target_compile_options(imgui_backend PRIVATE
+        -Wno-conversion
+        -Wno-sign-conversion
         -Wno-float-conversion
         -Wno-implicit-int-float-conversion
         -Wno-double-promotion
@@ -140,8 +142,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wno-old-style-cast
     )
     # Our code - keep most strict warnings, only disable ImGui API conversion issues
-    target_compile_options(cppmusic_imgui_ui PRIVATE 
-        -Wno-conversion 
+    target_compile_options(cppmusic_imgui_ui PRIVATE
+        -Wno-conversion
         -Wno-sign-conversion
     )
 endif()
@@ -155,7 +157,7 @@ if(BUILD_IMGUI_SAMPLE_APP)
     add_executable(cppmusic_imgui_app
         main.cpp
     )
-    
+
     target_link_libraries(cppmusic_imgui_app PRIVATE
         cppmusic_imgui_ui
     )
@@ -175,7 +177,7 @@ if(BUILD_IMGUI_SMOKE_TEST)
     add_executable(imgui_smoke_test
         tests/smoke_test.cpp
     )
-    
+
     target_link_libraries(imgui_smoke_test PRIVATE
         cppmusic_imgui_ui
     )
@@ -193,30 +195,30 @@ add_library(cppmusic_godmode_ui STATIC
     # Reactive data binding
     ${CMAKE_SOURCE_DIR}/src/ui/core/reactive/Signal.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/reactive/ParameterSignal.hpp
-    
+
     # Input routing
     ${CMAKE_SOURCE_DIR}/src/ui/core/input/InputRouter.hpp
-    
+
     # GPU rendering
     ${CMAKE_SOURCE_DIR}/src/ui/core/render/WaveformRenderer.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/render/WaveformRenderer.cpp
-    
+
     # Diagnostics
     ${CMAKE_SOURCE_DIR}/src/ui/core/diagnostics/DiagnosticsOverlay.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/diagnostics/DiagnosticsOverlay.cpp
-    
+
     # Layout persistence
     ${CMAKE_SOURCE_DIR}/src/ui/core/layout/LayoutSerializer.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/core/layout/LayoutSerializer.cpp
-    
+
     # Theme system
     ${CMAKE_SOURCE_DIR}/src/ui/theme/ThemeManager.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/theme/ThemeManager.cpp
-    
+
     # Internationalization
     ${CMAKE_SOURCE_DIR}/src/ui/i18n/I18n.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/i18n/I18n.cpp
-    
+
     # Lua scripting (stub implementation)
     ${CMAKE_SOURCE_DIR}/src/ui/script/LuaVM.hpp
     ${CMAKE_SOURCE_DIR}/src/ui/script/LuaVM.cpp
@@ -233,8 +235,8 @@ target_link_libraries(cppmusic_godmode_ui PUBLIC
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(cppmusic_godmode_ui PRIVATE 
-        -Wno-conversion 
+    target_compile_options(cppmusic_godmode_ui PRIVATE
+        -Wno-conversion
         -Wno-sign-conversion
     )
 endif()
