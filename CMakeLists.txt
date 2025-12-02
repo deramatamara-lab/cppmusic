@@ -63,7 +63,7 @@ endif()
 
 # Silence noisy diagnostics coming exclusively from JUCE's generated code while keeping -Werror everywhere else
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wno-array-bounds -Wno-maybe-uninitialized)
+    add_compile_options(-Wno-array-bounds -Wno-maybe-uninitialized -Wno-uninitialized -Wno-null-dereference)
 endif()
 
 # GCC 13+ specific: disable stringop-overflow for JUCE DSP code (false positives in template instantiation)

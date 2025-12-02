@@ -5,6 +5,8 @@ set(UI_CORE_SOURCES
     AnimationHelper.cpp
     AppState.cpp
     Commands.cpp
+    PlaybackController.cpp
+    ProjectController.cpp
 )
 
 set(UI_CORE_HEADERS
@@ -13,6 +15,8 @@ set(UI_CORE_HEADERS
     AnimationHelper.h
     AppState.hpp
     Commands.hpp
+    PlaybackController.hpp
+    ProjectController.hpp
 )
 
 add_library(ui_core STATIC
@@ -26,6 +30,8 @@ target_include_directories(ui_core PUBLIC
 
 target_link_libraries(ui_core PUBLIC
     ui_lookandfeel
+    audio_engine
+    project_model
 )
 
 if(TARGET juce::juce_gui_basics)

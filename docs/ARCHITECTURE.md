@@ -107,11 +107,24 @@ The UI implements a pattern-oriented DAW workflow inspired by FL Studio's channe
 - `DrumMachine`: Drum pattern programming
 - `StatusStrip`: Project name, CPU meter, status indicators
 
+**Controllers (`src/ui/core/`):**
+- `PlaybackController`: Thread-safe bridge between UI and audio engine for transport control
+  - Provides play/stop/seek/tempo/loop methods callable from UI thread
+  - Maintains lock-free state snapshot via `getCurrentState()`
+  - Notifies listeners of transport state changes
+  - Uses atomics for safe audio thread communication
+- `ProjectController`: Manages ProjectModel and notifies UI of changes
+  - Provides helper methods for pattern/track/clip operations
+  - Manages active pattern for piano roll editing
+  - Notifies listeners when project structure changes
+  - Bridges project model to UI components
+
 **UI/Engine Boundary:**
-- UI interacts with engine/model via thread-safe controller objects
+- UI interacts with engine/model via thread-safe controller objects (PlaybackController, ProjectController)
 - State changes dispatched via lock-free message queues
-- Transport controls map to engine Transport methods
-- Playhead position updated via timer callbacks
+- Transport controls map to engine Transport methods via PlaybackController
+- Playhead position updated via timer callbacks reading PlaybackController state
+- Pattern/track/clip operations go through ProjectController for consistency
 
 ### AI Module (`daw::ai`)
 **Location**: `src/ai/`  
