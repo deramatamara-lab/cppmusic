@@ -9,6 +9,7 @@
 #include "panels/PlaylistPanel.hpp"
 #include "panels/MixerPanel.hpp"
 #include "panels/InspectorPanel.hpp"
+#include "audio/AudioEngine.hpp"
 
 #include <SDL.h>
 #include "imgui.h"
@@ -60,7 +61,7 @@ struct AppConfig
 
 /**
  * @brief Main application class for the ImGui-based DAW UI
- * 
+ *
  * Manages the SDL2 window, OpenGL context, ImGui initialization,
  * dockspace layout, theme system, and all UI panels.
  */
@@ -118,6 +119,12 @@ public:
     [[nodiscard]] const PerformanceMetrics& getMetrics() const { return metrics_; }
 
     /**
+     * @brief Get the audio engine
+     */
+    [[nodiscard]] AudioEngine* getAudioEngine() { return audioEngine_.get(); }
+    [[nodiscard]] const AudioEngine* getAudioEngine() const { return audioEngine_.get(); }
+
+    /**
      * @brief Reload theme from file
      */
     void reloadTheme();
@@ -148,7 +155,7 @@ private:
     // SDL/OpenGL resources
     SDL_Window* window_{nullptr};
     SDL_GLContext glContext_{nullptr};
-    
+
     // Configuration
     AppConfig config_;
     bool running_{false};
@@ -168,6 +175,12 @@ private:
     std::unique_ptr<PlaylistPanel> playlistPanel_;
     std::unique_ptr<MixerPanel> mixerPanel_;
     std::unique_ptr<InspectorPanel> inspectorPanel_;
+
+    // Audio Engine (real sound!)
+    std::unique_ptr<AudioEngine> audioEngine_;
+
+    // State tracking
+    TransportMode lastTransportMode_{TransportMode::Pattern};
 
     // Panel visibility
     bool showBrowser_{true};

@@ -10,75 +10,75 @@ namespace daw::ui::imgui
 
 /**
  * @brief Theme tokens structure for design system consistency
- * 
+ *
  * All sizes are in logical pixels (DPI-scaled automatically).
  * Colors use 0-255 RGBA values.
  */
 struct ThemeTokens
 {
-    // Colors - Window & Background
-    ImVec4 windowBg{0.08f, 0.08f, 0.10f, 1.0f};
-    ImVec4 childBg{0.10f, 0.10f, 0.12f, 1.0f};
-    ImVec4 popupBg{0.12f, 0.12f, 0.14f, 1.0f};
-    ImVec4 border{0.20f, 0.20f, 0.25f, 1.0f};
+    // Colors - Window & Background (FL Studio dark theme)
+    ImVec4 windowBg{0.11f, 0.11f, 0.11f, 1.0f};        // #1C1C1C
+    ImVec4 childBg{0.13f, 0.13f, 0.13f, 1.0f};         // #212121
+    ImVec4 popupBg{0.15f, 0.15f, 0.15f, 1.0f};         // #262626
+    ImVec4 border{0.25f, 0.25f, 0.25f, 1.0f};          // #404040
     ImVec4 borderShadow{0.0f, 0.0f, 0.0f, 0.0f};
 
-    // Colors - Headers & Titles
-    ImVec4 titleBg{0.06f, 0.06f, 0.08f, 1.0f};
-    ImVec4 titleBgActive{0.15f, 0.35f, 0.55f, 1.0f};
-    ImVec4 titleBgCollapsed{0.06f, 0.06f, 0.08f, 0.8f};
-    ImVec4 menuBarBg{0.10f, 0.10f, 0.12f, 1.0f};
+    // Colors - Headers & Titles (FL-style darker)
+    ImVec4 titleBg{0.09f, 0.09f, 0.09f, 1.0f};         // #171717
+    ImVec4 titleBgActive{0.85f, 0.45f, 0.15f, 1.0f};   // FL orange accent
+    ImVec4 titleBgCollapsed{0.09f, 0.09f, 0.09f, 0.8f};
+    ImVec4 menuBarBg{0.11f, 0.11f, 0.11f, 1.0f};       // #1C1C1C
 
-    // Colors - Tabs
-    ImVec4 tab{0.12f, 0.12f, 0.14f, 1.0f};
-    ImVec4 tabHovered{0.25f, 0.45f, 0.65f, 1.0f};
-    ImVec4 tabActive{0.18f, 0.38f, 0.58f, 1.0f};
-    ImVec4 tabUnfocused{0.10f, 0.10f, 0.12f, 1.0f};
-    ImVec4 tabUnfocusedActive{0.14f, 0.28f, 0.42f, 1.0f};
+    // Colors - Tabs (FL-style with orange accent)
+    ImVec4 tab{0.15f, 0.15f, 0.15f, 1.0f};             // #262626
+    ImVec4 tabHovered{0.90f, 0.50f, 0.20f, 1.0f};      // FL orange hover
+    ImVec4 tabActive{0.85f, 0.45f, 0.15f, 1.0f};       // FL orange active
+    ImVec4 tabUnfocused{0.13f, 0.13f, 0.13f, 1.0f};
+    ImVec4 tabUnfocusedActive{0.60f, 0.35f, 0.12f, 1.0f};
 
-    // Colors - Buttons & Interactives
-    ImVec4 button{0.18f, 0.18f, 0.22f, 1.0f};
-    ImVec4 buttonHovered{0.28f, 0.48f, 0.68f, 1.0f};
-    ImVec4 buttonActive{0.22f, 0.42f, 0.62f, 1.0f};
-    ImVec4 header{0.18f, 0.38f, 0.58f, 0.8f};
-    ImVec4 headerHovered{0.25f, 0.45f, 0.65f, 1.0f};
-    ImVec4 headerActive{0.22f, 0.42f, 0.62f, 1.0f};
+    // Colors - Buttons & Interactives (FL-style)
+    ImVec4 button{0.20f, 0.20f, 0.20f, 1.0f};          // #333333
+    ImVec4 buttonHovered{0.90f, 0.50f, 0.20f, 1.0f};   // FL orange
+    ImVec4 buttonActive{0.75f, 0.40f, 0.15f, 1.0f};    // FL orange pressed
+    ImVec4 header{0.85f, 0.45f, 0.15f, 0.8f};          // FL orange header
+    ImVec4 headerHovered{0.90f, 0.50f, 0.20f, 1.0f};
+    ImVec4 headerActive{0.75f, 0.40f, 0.15f, 1.0f};
 
-    // Colors - Frame & Input
-    ImVec4 frameBg{0.12f, 0.12f, 0.14f, 1.0f};
-    ImVec4 frameBgHovered{0.18f, 0.18f, 0.22f, 1.0f};
-    ImVec4 frameBgActive{0.15f, 0.35f, 0.55f, 1.0f};
-    ImVec4 checkMark{0.30f, 0.70f, 0.90f, 1.0f};
+    // Colors - Frame & Input (darker FL-style)
+    ImVec4 frameBg{0.17f, 0.17f, 0.17f, 1.0f};         // #2B2B2B
+    ImVec4 frameBgHovered{0.22f, 0.22f, 0.22f, 1.0f};  // #383838
+    ImVec4 frameBgActive{0.85f, 0.45f, 0.15f, 1.0f};   // FL orange
+    ImVec4 checkMark{0.90f, 0.50f, 0.20f, 1.0f};       // FL orange checkmark
 
-    // Colors - Slider
-    ImVec4 sliderGrab{0.30f, 0.50f, 0.70f, 1.0f};
-    ImVec4 sliderGrabActive{0.35f, 0.55f, 0.75f, 1.0f};
+    // Colors - Slider (FL-style orange)
+    ImVec4 sliderGrab{0.85f, 0.45f, 0.15f, 1.0f};      // FL orange
+    ImVec4 sliderGrabActive{0.90f, 0.50f, 0.20f, 1.0f};
 
-    // Colors - Scrollbar
-    ImVec4 scrollbarBg{0.08f, 0.08f, 0.10f, 0.6f};
-    ImVec4 scrollbarGrab{0.25f, 0.25f, 0.30f, 1.0f};
-    ImVec4 scrollbarGrabHovered{0.35f, 0.35f, 0.40f, 1.0f};
-    ImVec4 scrollbarGrabActive{0.40f, 0.40f, 0.45f, 1.0f};
+    // Colors - Scrollbar (FL-style)
+    ImVec4 scrollbarBg{0.11f, 0.11f, 0.11f, 0.6f};
+    ImVec4 scrollbarGrab{0.30f, 0.30f, 0.30f, 1.0f};
+    ImVec4 scrollbarGrabHovered{0.85f, 0.45f, 0.15f, 1.0f}; // FL orange
+    ImVec4 scrollbarGrabActive{0.75f, 0.40f, 0.15f, 1.0f};
 
-    // Colors - Selection & Focus
-    ImVec4 textSelectedBg{0.25f, 0.45f, 0.65f, 0.5f};
-    ImVec4 navHighlight{0.30f, 0.50f, 0.70f, 1.0f};
+    // Colors - Selection & Focus (FL-style orange)
+    ImVec4 textSelectedBg{0.85f, 0.45f, 0.15f, 0.5f};  // FL orange selection
+    ImVec4 navHighlight{0.90f, 0.50f, 0.20f, 1.0f};    // FL orange highlight
 
-    // Colors - Text
-    ImVec4 text{0.92f, 0.92f, 0.94f, 1.0f};
-    ImVec4 textDisabled{0.50f, 0.50f, 0.52f, 1.0f};
+    // Colors - Text (brighter for contrast)
+    ImVec4 text{0.95f, 0.95f, 0.95f, 1.0f};            // #F2F2F2
+    ImVec4 textDisabled{0.50f, 0.50f, 0.50f, 1.0f};    // #808080
 
-    // Colors - Resize & Separators
-    ImVec4 separator{0.25f, 0.25f, 0.30f, 1.0f};
-    ImVec4 separatorHovered{0.35f, 0.55f, 0.75f, 1.0f};
-    ImVec4 separatorActive{0.40f, 0.60f, 0.80f, 1.0f};
-    ImVec4 resizeGrip{0.25f, 0.25f, 0.30f, 0.4f};
-    ImVec4 resizeGripHovered{0.35f, 0.55f, 0.75f, 0.7f};
-    ImVec4 resizeGripActive{0.40f, 0.60f, 0.80f, 0.9f};
+    // Colors - Resize & Separators (FL-style)
+    ImVec4 separator{0.25f, 0.25f, 0.25f, 1.0f};
+    ImVec4 separatorHovered{0.85f, 0.45f, 0.15f, 1.0f}; // FL orange
+    ImVec4 separatorActive{0.90f, 0.50f, 0.20f, 1.0f};
+    ImVec4 resizeGrip{0.30f, 0.30f, 0.30f, 0.4f};
+    ImVec4 resizeGripHovered{0.85f, 0.45f, 0.15f, 0.7f};
+    ImVec4 resizeGripActive{0.90f, 0.50f, 0.20f, 0.9f};
 
-    // Colors - Docking
-    ImVec4 dockingPreview{0.25f, 0.45f, 0.65f, 0.7f};
-    ImVec4 dockingEmptyBg{0.08f, 0.08f, 0.10f, 1.0f};
+    // Colors - Docking (FL-style)
+    ImVec4 dockingPreview{0.85f, 0.45f, 0.15f, 0.7f};  // FL orange preview
+    ImVec4 dockingEmptyBg{0.11f, 0.11f, 0.11f, 1.0f};
 
     // Colors - Plot & Table
     ImVec4 tableBorderStrong{0.25f, 0.25f, 0.30f, 1.0f};
@@ -93,19 +93,19 @@ struct ThemeTokens
     ImVec4 meterRed{0.95f, 0.25f, 0.25f, 1.0f};
     ImVec4 meterBackground{0.10f, 0.10f, 0.12f, 1.0f};
 
-    // Custom DAW Colors - Timeline & Piano Roll
-    ImVec4 gridLine{0.20f, 0.20f, 0.25f, 0.5f};
-    ImVec4 gridLineBeat{0.30f, 0.30f, 0.35f, 0.7f};
-    ImVec4 gridLineBar{0.40f, 0.40f, 0.45f, 0.9f};
-    ImVec4 playhead{0.95f, 0.35f, 0.35f, 1.0f};
-    ImVec4 selection{0.30f, 0.50f, 0.70f, 0.3f};
-    ImVec4 noteOn{0.30f, 0.60f, 0.90f, 1.0f};
-    ImVec4 noteOff{0.20f, 0.40f, 0.60f, 0.5f};
+    // Custom DAW Colors - Timeline & Piano Roll (FL-style)
+    ImVec4 gridLine{0.22f, 0.22f, 0.22f, 0.5f};        // Subtle grid
+    ImVec4 gridLineBeat{0.28f, 0.28f, 0.28f, 0.7f};
+    ImVec4 gridLineBar{0.35f, 0.35f, 0.35f, 0.9f};
+    ImVec4 playhead{0.95f, 0.40f, 0.20f, 1.0f};        // FL orange-red playhead
+    ImVec4 selection{0.85f, 0.45f, 0.15f, 0.3f};       // FL orange selection
+    ImVec4 noteOn{0.40f, 0.70f, 0.95f, 1.0f};          // FL blue notes
+    ImVec4 noteOff{0.25f, 0.50f, 0.70f, 0.5f};
 
-    // Custom DAW Colors - Transport
-    ImVec4 playButton{0.20f, 0.75f, 0.40f, 1.0f};
-    ImVec4 stopButton{0.85f, 0.30f, 0.30f, 1.0f};
-    ImVec4 recordButton{0.95f, 0.20f, 0.20f, 1.0f};
+    // Custom DAW Colors - Transport (FL-style)
+    ImVec4 playButton{0.30f, 0.85f, 0.45f, 1.0f};      // FL green play
+    ImVec4 stopButton{0.70f, 0.70f, 0.70f, 1.0f};      // FL grey stop
+    ImVec4 recordButton{0.95f, 0.30f, 0.30f, 1.0f};    // FL red record
 
     // Layout - Spacing (8px grid system)
     float spacingXs{4.0f};
@@ -139,7 +139,7 @@ struct ThemeTokens
 
 /**
  * @brief Theme manager for the DAW UI
- * 
+ *
  * Handles loading themes from JSON files, applying to ImGui style,
  * and live reloading during development.
  */

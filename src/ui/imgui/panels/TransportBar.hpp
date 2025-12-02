@@ -164,7 +164,7 @@ private:
     void drawPlayButton(const Theme& theme);
     void drawStopButton(const Theme& theme);
     void drawRecordButton(const Theme& theme);
-    void drawModeToggle(const Theme& theme);
+    void drawModeSelector(const Theme& theme);
     void drawPatternSelector(const Theme& theme);
     void drawBpmControl(const Theme& theme);
     void drawTapTempoButton(const Theme& theme);

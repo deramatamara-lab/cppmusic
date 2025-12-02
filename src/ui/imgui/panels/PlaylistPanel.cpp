@@ -228,10 +228,13 @@ void PlaylistPanel::drawToolbar(const Theme& theme)
             ImGui::PushStyleColor(ImGuiCol_Button, theme.getTokens().buttonActive);
         }
 
+        // Ensure unique IDs for toolbar buttons to avoid conflicts
+        ImGui::PushID(i);
         if (ImGui::Button(toolNames[i]))
         {
             currentTool_ = static_cast<PlaylistTool>(i);
         }
+        ImGui::PopID();
 
         if (isActive)
         {

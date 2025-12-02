@@ -85,6 +85,7 @@ set(IMGUI_UI_SOURCES
     App.cpp
     Theme.cpp
     Shortcuts.cpp
+    audio/AudioEngine.cpp
     panels/TransportBar.cpp
     panels/BrowserPanel.cpp
     panels/ChannelRackPanel.cpp
@@ -99,6 +100,7 @@ set(IMGUI_UI_HEADERS
     App.hpp
     Theme.hpp
     Shortcuts.hpp
+    audio/AudioEngine.hpp
     panels/TransportBar.hpp
     panels/BrowserPanel.hpp
     panels/ChannelRackPanel.hpp

@@ -95,6 +95,7 @@ struct ChannelState
     // Plugin reference
     int pluginId{-1};           ///< Plugin instance ID
     std::string pluginName;
+    std::string samplePath;     ///< Path to sample file
 
     // Loop settings
     bool loopEnabled{false};
@@ -155,6 +156,11 @@ public:
     void addChannel(const std::string& name = "New Channel", ChannelType type = ChannelType::Sampler);
 
     /**
+     * @brief Load a sample into a channel
+     */
+    void loadSample(int channelIndex, const std::string& path);
+
+    /**
      * @brief Set number of steps per pattern
      */
     void setStepsPerPattern(int steps);
@@ -192,6 +198,33 @@ public:
     {
         onChannelDoubleClick_ = std::move(callback);
     }
+
+    /**
+     * @brief Set current playback step (from audio engine)
+     */
+    void setCurrentStep(int step) { currentStep_ = step; }
+
+    /**
+     * @brief Get current step
+     */
+    [[nodiscard]] int getCurrentStep() const { return currentStep_; }
+
+    /**
+     * @brief Set step state directly (for syncing with audio engine)
+     */
+    void setStepState(int channel, int step, bool active)
+    {
+        if (channel >= 0 && channel < static_cast<int>(channels_.size()) &&
+            step >= 0 && step < static_cast<int>(channels_[channel].steps.size()))
+        {
+            channels_[channel].steps[step] = active;
+        }
+    }
+
+    /**
+     * @brief Sync channel count from audio engine
+     */
+    void syncFromAudioEngine(int numChannels, const std::vector<std::string>& names);
 
 private:
     std::vector<ChannelState> channels_;

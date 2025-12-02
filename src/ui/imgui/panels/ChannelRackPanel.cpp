@@ -1,19 +1,22 @@
 #include "ChannelRackPanel.hpp"
+#include "BrowserPanel.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 
 namespace daw::ui::imgui
 {
 
 ChannelRackPanel::ChannelRackPanel()
 {
-    createDemoChannels();
+    // Don't create demo channels - let them sync from audio engine
+    // createDemoChannels();
 }
 
 void ChannelRackPanel::createDemoChannels()
 {
-    // Create demo channels
+    // Create demo channels - only called if no audio engine
     addChannel("Kick");
     addChannel("Snare");
     addChannel("Hi-Hat");
@@ -28,25 +31,22 @@ void ChannelRackPanel::createDemoChannels()
         channels_[0].steps[8] = true;
         channels_[0].steps[12] = true;
 
-        // Snare on 5, 13 with probability
+        // Snare on 5, 13
         channels_[1].steps[4] = true;
         channels_[1].steps[12] = true;
-        channels_[1].probabilities[4] = 0.9f;  // 90% probability
 
-        // Hi-hat on all with varying velocity
+        // Hi-hat on every other step
         for (int i = 0; i < stepsPerPattern_; i += 2)
         {
             channels_[2].steps[static_cast<size_t>(i)] = true;
             channels_[2].velocities[static_cast<size_t>(i)] = (i % 4 == 0) ? 1.0f : 0.6f;
         }
 
-        // Bass pattern with micro-timing
+        // Bass pattern
         channels_[3].steps[0] = true;
         channels_[3].steps[3] = true;
         channels_[3].steps[8] = true;
         channels_[3].steps[11] = true;
-        channels_[3].microTimingOffsets[3] = -30;  // Slightly early
-        channels_[3].microTimingOffsets[11] = 20;  // Slightly late
     }
 }
 
@@ -62,6 +62,22 @@ void ChannelRackPanel::addChannel(const std::string& name, ChannelType type)
     channel.conditionParams.resize(static_cast<size_t>(stepsPerPattern_), 1);
     channel.microTimingOffsets.resize(static_cast<size_t>(stepsPerPattern_), 0);
     channels_.push_back(std::move(channel));
+}
+
+void ChannelRackPanel::loadSample(int channelIndex, const std::string& path)
+{
+    if (channelIndex >= 0 && channelIndex < static_cast<int>(channels_.size()))
+    {
+        auto& channel = channels_[channelIndex];
+        channel.type = ChannelType::Sampler;
+        channel.samplePath = path;
+
+        // Update name to filename
+        std::filesystem::path p(path);
+        channel.name = p.stem().string();
+
+        // TODO: Actually load audio data
+    }
 }
 
 void ChannelRackPanel::setStepsPerPattern(int steps)
@@ -202,14 +218,38 @@ void ChannelRackPanel::drawChannel(int index, ChannelState& channel, const Theme
 
     ImGui::SameLine();
 
-    // Channel name
-    ImGui::SetNextItemWidth(80.0f * scale);
-    char nameBuf[64];
-    std::snprintf(nameBuf, sizeof(nameBuf), "%s", channel.name.c_str());
-    if (ImGui::InputText("##Name", nameBuf, sizeof(nameBuf)))
+    // Channel name button (FL-style)
+    ImGui::PushStyleColor(ImGuiCol_Button, channel.color);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(channel.color.x * 1.2f, channel.color.y * 1.2f, channel.color.z * 1.2f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(channel.color.x * 0.8f, channel.color.y * 0.8f, channel.color.z * 0.8f, 1.0f));
+
+    if (ImGui::Button(channel.name.c_str(), ImVec2(100.0f * scale, 24.0f * scale)))
     {
-        channel.name = nameBuf;
+        selectedChannel_ = index;
+        if (onChannelSelected_) onChannelSelected_(index);
     }
+
+    // Double click to open plugin
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+    {
+        if (onChannelDoubleClick_) onChannelDoubleClick_(index);
+    }
+
+    // Drag and drop target (for loading samples/presets)
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BROWSER_ITEM"))
+        {
+            const BrowserItem* item = *(const BrowserItem**)payload->Data;
+            if (item && (item->type == BrowserItemType::AudioFile || item->type == BrowserItemType::Preset))
+            {
+                loadSample(index, item->path);
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    ImGui::PopStyleColor(3);
 
     ImGui::SameLine();
 
@@ -279,25 +319,24 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
         float x = cursorPos.x + static_cast<float>(i) * (stepSize + stepSpacing);
         float y = cursorPos.y;
 
-        // Highlight every 4th step (beat)
-        ImVec4 bgColor = (i % 4 == 0) ? tokens.frameBgHovered : tokens.frameBg;
+        // Highlight every 4th step (beat) - FL Studio style with alternating shade
+        bool isBeat = (i % 4 == 0);
+        bool isBar = (i % 16 == 0);
+        ImVec4 bgColor = isBar ? ImVec4(0.25f, 0.25f, 0.28f, 1.0f) :
+                         isBeat ? ImVec4(0.22f, 0.22f, 0.25f, 1.0f) :
+                                  tokens.frameBg;
 
-        // Active step
-        ImVec4 stepColor = channel.steps[static_cast<size_t>(i)] ? tokens.noteOn : bgColor;
+        // Active step - FL orange
+        ImVec4 stepColor = channel.steps[static_cast<size_t>(i)] ?
+            ImVec4(0.95f, 0.55f, 0.15f, 1.0f) : bgColor;
 
-        // Current playhead position
-        if (i == currentStep_)
-        {
-            stepColor = ImVec4(
-                stepColor.x * 1.3f,
-                stepColor.y * 1.3f,
-                stepColor.z * 1.3f,
-                stepColor.w
-            );
-        }
+        // Current playhead position - bright white outline
+        bool isCurrentStep = (i == currentStep_);
 
         ImU32 color = ImGui::ColorConvertFloat4ToU32(stepColor);
-        ImU32 borderColor = ImGui::ColorConvertFloat4ToU32(tokens.border);
+        ImU32 borderColor = isCurrentStep ?
+            ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f)) :
+            ImGui::ColorConvertFloat4ToU32(tokens.border);
 
         drawList->AddRectFilled(
             ImVec2(x, y),
@@ -306,11 +345,15 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
             tokens.radiusSm * scale
         );
 
+        // Playhead indicator - thicker border for current step
+        float borderThickness = isCurrentStep ? 2.0f : 1.0f;
         drawList->AddRect(
             ImVec2(x, y),
             ImVec2(x + stepSize, y + stepSize),
             borderColor,
-            tokens.radiusSm * scale
+            tokens.radiusSm * scale,
+            0,
+            borderThickness
         );
 
         // Velocity indicator (height)
@@ -335,6 +378,7 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
         float y = cursorPos.y;
 
         ImGui::SetCursorScreenPos(ImVec2(x, y));
+        ImGui::PushID(i); // Unique ID per step to avoid ID conflicts
         ImGui::InvisibleButton("##step", ImVec2(stepSize, stepSize));
 
         if (ImGui::IsItemClicked(0))
@@ -365,6 +409,7 @@ void ChannelRackPanel::drawStepGrid(int channelIndex, ChannelState& channel, con
                 }
             }
         }
+        ImGui::PopID(); // Restore previous ID
     }
 
     // Submit a dummy item to properly grow parent bounds
